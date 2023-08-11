@@ -10,3 +10,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+jwt:
+  accessTokenSecret: ${JWT_ACCESS_TOKEN_SECRET}
+  accessTokenExpiry: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+  refreshTokenExpiry: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+  refreshTokenSecret: ${JWT_REFRESH_TOKEN_SECRET}
