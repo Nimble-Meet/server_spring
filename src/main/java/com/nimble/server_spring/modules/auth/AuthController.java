@@ -2,6 +2,8 @@ package com.nimble.server_spring.modules.auth;
 
 import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
+import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
+import com.nimble.server_spring.modules.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,15 @@ public class AuthController {
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
     private final AuthTokenProvider authTokenProvider;
+
+    @PostMapping("/signup")
+    public ResponseEntity signup(
+            @RequestBody LocalSignupRequestDto localSignupDto
+            ) {
+        User user = authService.signup(localSignupDto);
+
+        return new ResponseEntity(user, HttpStatus.CREATED);
+    }
 
     @PostMapping("/login/local")
     public ResponseEntity login(

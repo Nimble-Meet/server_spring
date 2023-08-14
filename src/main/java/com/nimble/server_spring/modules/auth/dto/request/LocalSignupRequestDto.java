@@ -7,7 +7,7 @@ import lombok.Setter;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.validation.annotation.Validated;
 
-@Getter
+@Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Validated
