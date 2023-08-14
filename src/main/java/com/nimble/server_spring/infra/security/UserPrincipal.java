@@ -21,7 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class UserPrincipal implements OAuth2User, UserDetails, OidcUser {
-    private final String oauthId;
+    private final String email;
     private final String password;
     private final OauthProvider providerType;
     private final RoleType roleType;
@@ -30,12 +30,12 @@ public class UserPrincipal implements OAuth2User, UserDetails, OidcUser {
 
     @Override
     public String getName() {
-        return oauthId;
+        return email;
     }
 
     @Override
     public String getUsername() {
-        return oauthId;
+        return email;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class UserPrincipal implements OAuth2User, UserDetails, OidcUser {
 
     public static UserPrincipal from(User user) {
         return new UserPrincipal(
-                user.getProviderId(),
+                user.getEmail(),
                 user.getPassword(),
                 user.getProviderType(),
                 RoleType.USER,

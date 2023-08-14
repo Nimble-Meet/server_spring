@@ -1,23 +1,28 @@
 package com.nimble.server_spring.infra.jwt;
 
 import io.jsonwebtoken.*;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Slf4j
 @RequiredArgsConstructor
+@Getter
 public class AuthToken {
     private final String token;
     private final Key key;
+    private LocalDateTime expiresAt;
 
     static final String AUTHORITIES_KEY = "role";
 
     AuthToken(String id, Date expiry, Key key) {
         this.key = key;
         this.token = createAuthToken(id, expiry);
+        this.expiresAt = LocalDateTime.of(expiry.getYear(), expiry.getMonth(), expiry.getDay(), expiry.getHours(), expiry.getMinutes(), expiry.getSeconds());
     }
 
     private String createAuthToken(String id, Date expiry) {
