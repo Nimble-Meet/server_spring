@@ -15,14 +15,14 @@ import java.util.List;
 public class AuthTokenProvider {
     private final Key accessTokenKey;
     private final Key refreshTokenKey;
-    private final Long accessTokenExpiry;
-    private final Long refreshTokenExpiry;
+    private final Integer accessTokenExpiry;
+    private final Integer refreshTokenExpiry;
 
     public AuthTokenProvider(
             String accessTokenSecret,
             String refreshTokenSecret,
-            Long accessTokenExpiry,
-            Long refreshTokenExpiry
+            Integer accessTokenExpiry,
+            Integer refreshTokenExpiry
     ) {
         this.accessTokenKey = Keys.hmacShaKeyFor(accessTokenSecret.getBytes());
         this.refreshTokenKey = Keys.hmacShaKeyFor(refreshTokenSecret.getBytes());

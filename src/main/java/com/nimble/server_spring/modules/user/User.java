@@ -7,13 +7,15 @@ import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@EqualsAndHashCode(of = "id")
+@ToString @EqualsAndHashCode(of = "id")
 @Builder @AllArgsConstructor @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id @GeneratedValue
     private Long id;
@@ -34,7 +36,6 @@ public class User {
     private String password;
 
     @Column()
-    @Email
     private String nickname;
 
     @Column

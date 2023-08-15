@@ -25,7 +25,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final AuthTokenProvider authTokenProvider;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public User signup(LocalSignupRequestDto localSignupDto) {
         boolean isEmailAlreadyExists = userRepository.existsByEmail(
                 localSignupDto.getEmail()
