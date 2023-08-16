@@ -3,11 +3,13 @@ package com.nimble.server_spring.modules.auth;
 import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
 import com.nimble.server_spring.infra.properties.JwtProperties;
 import com.nimble.server_spring.infra.utils.CookieUtils;
+import com.nimble.server_spring.infra.utils.HeaderUtils;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
 import com.nimble.server_spring.modules.auth.dto.response.UserResponseDto;
 import com.nimble.server_spring.modules.user.User;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(JwtProperties.class)
 public class AuthController {
+    public static final String ACCESS_TOKEN_KEY = "access_token";
+    public static final String REFRESH_TOKEN_KEY = "refresh_token";
+
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
     private final AuthTokenProvider authTokenProvider;
@@ -56,9 +61,37 @@ public class AuthController {
                 .userId(jwtToken.getUser().getId())
                 .accessToken(jwtToken.getAccessToken())
                 .build();
-        CookieUtils.addCookie(response, "access_token", jwtToken.getAccessToken(), jwtProperties.getAccessTokenExpiry());
-        CookieUtils.addCookie(response, "refresh_token", jwtToken.getRefreshToken(), jwtProperties.getRefreshTokenExpiry());
+        setJwtTokenCookie(response, jwtToken);
         return new ResponseEntity<>(loginResponseDto, HttpStatus.OK);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity refresh(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        Cookie refreshTokenCookie = CookieUtils.getCookie(request, REFRESH_TOKEN_KEY)
+                .orElseThrow(() -> new RuntimeException(AuthErrorMessages.REFRESH_TOKEN_DOES_NOT_EXIST.getMessage()));
+        String refreshToken = refreshTokenCookie.getValue();
+
+        String accessToken = HeaderUtils.resolveBearerTokenFrom(request);
+        if(accessToken == null) {
+            throw new RuntimeException(AuthErrorMessages.ACCESS_TOKEN_DOES_NOT_EXIST.getMessage());
+        }
+
+        JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);
+
+        setJwtTokenCookie(response, jwtToken);
+        LoginResponseDto loginResponseDto = LoginResponseDto.builder()
+                .userId(jwtToken.getUser().getId())
+                .accessToken(jwtToken.getAccessToken())
+                .build();
+        return new ResponseEntity<>(loginResponseDto, HttpStatus.OK);
+    }
+
+    private void setJwtTokenCookie(HttpServletResponse response, JwtToken jwtToken) {
+        CookieUtils.addCookie(response, ACCESS_TOKEN_KEY, jwtToken.getAccessToken(), jwtProperties.getAccessTokenExpiry());
+        CookieUtils.addCookie(response, REFRESH_TOKEN_KEY, jwtToken.getRefreshToken(), jwtProperties.getRefreshTokenExpiry());
     }
 
 }

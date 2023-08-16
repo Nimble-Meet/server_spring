@@ -26,8 +26,8 @@ public class AuthTokenProvider {
     ) {
         this.accessTokenKey = Keys.hmacShaKeyFor(accessTokenSecret.getBytes());
         this.refreshTokenKey = Keys.hmacShaKeyFor(refreshTokenSecret.getBytes());
-        this.accessTokenExpiry = accessTokenExpiry;
-        this.refreshTokenExpiry = refreshTokenExpiry;
+        this.accessTokenExpiry = accessTokenExpiry * 1000;
+        this.refreshTokenExpiry = refreshTokenExpiry * 1000;
     }
 
     public AuthToken publishAccessToken(String id, String role) {
@@ -44,6 +44,10 @@ public class AuthTokenProvider {
 
     public AuthToken createAccessTokenOf(String token) {
         return new AuthToken(token, accessTokenKey);
+    }
+
+    public AuthToken createRefreshTokenOf(String token) {
+        return new AuthToken(token, refreshTokenKey);
     }
 
     public Authentication getAuthentication(AuthToken authToken) {

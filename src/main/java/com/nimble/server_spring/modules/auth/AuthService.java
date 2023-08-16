@@ -2,6 +2,7 @@ package com.nimble.server_spring.modules.auth;
 
 import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
+import com.nimble.server_spring.infra.security.RoleType;
 import com.nimble.server_spring.infra.security.UserPrincipal;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
@@ -73,5 +74,32 @@ public class AuthService {
                 .build();
 
         return jwtTokenRepository.save(jwtToken);
+    }
+
+    public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
+        JwtToken jwtToken = jwtTokenRepository.findOneByRefreshToken(prevRefreshToken);
+        if (jwtToken == null) {
+            throw new RuntimeException(AuthErrorMessages.INVALID_REFRESH_TOKEN.getMessage());
+        }
+        if (!jwtToken.equalsAccessToken(prevAccessToken)) {
+            throw new RuntimeException(AuthErrorMessages.INCONSISTENT_ACCESS_TOKEN.getMessage());
+        }
+
+        AuthToken refreshToken = authTokenProvider.createRefreshTokenOf(prevRefreshToken);
+        if(!refreshToken.validate()) {
+            throw new RuntimeException(AuthErrorMessages.EXPIRED_REFRESH_TOKEN.getMessage());
+        }
+
+        AuthToken newAccessToken = authTokenProvider.publishAccessToken(jwtToken.getUser().getEmail(), RoleType.USER.getCode());
+        AuthToken newRefreshToken = authTokenProvider.publishRefreshToken(jwtToken.getUser().getEmail());
+
+        JwtToken newJwtToken = JwtToken.builder()
+                .id(jwtToken.getId())
+                .accessToken(newAccessToken.getToken())
+                .refreshToken(newRefreshToken.getToken())
+                .expiresAt(newRefreshToken.getExpiresAt())
+                .user(jwtToken.getUser())
+                .build();
+        return jwtTokenRepository.save(newJwtToken);
     }
 }
