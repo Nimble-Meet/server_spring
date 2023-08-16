@@ -15,7 +15,8 @@ public enum AuthErrorMessages {
     INCONSISTENT_ACCESS_TOKEN("이전에 발급한 엑세스 토큰이 아닙니다."),
     EXPIRED_REFRESH_TOKEN("리프레시 토큰이 만료되었습니다."),
     NOT_SHA256_ENCRYPTED("sha256으로 인코딩된 문자열이 아닙니다."),
-    USER_NOT_FOUND("존재하지 않는 유저입니다.");
+    USER_NOT_FOUND("존재하지 않는 유저입니다."),
+    INVALID_AUTH_TOKEN("유효하지 않은 AuthToken 입니다.");
 
     private String message;
 

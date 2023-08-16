@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping("/api/auth")
@@ -71,12 +72,18 @@ public class AuthController {
             HttpServletResponse response
     ) {
         Cookie refreshTokenCookie = CookieUtils.getCookie(request, REFRESH_TOKEN_KEY)
-                .orElseThrow(() -> new RuntimeException(AuthErrorMessages.REFRESH_TOKEN_DOES_NOT_EXIST.getMessage()));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        AuthErrorMessages.REFRESH_TOKEN_DOES_NOT_EXIST.getMessage()
+                ));
         String refreshToken = refreshTokenCookie.getValue();
 
         String accessToken = HeaderUtils.resolveBearerTokenFrom(request);
         if(accessToken == null) {
-            throw new RuntimeException(AuthErrorMessages.ACCESS_TOKEN_DOES_NOT_EXIST.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    AuthErrorMessages.ACCESS_TOKEN_DOES_NOT_EXIST.getMessage()
+            );
         }
 
         JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);

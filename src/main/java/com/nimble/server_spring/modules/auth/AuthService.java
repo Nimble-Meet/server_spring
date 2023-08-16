@@ -79,15 +79,24 @@ public class AuthService {
     public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
         JwtToken jwtToken = jwtTokenRepository.findOneByRefreshToken(prevRefreshToken);
         if (jwtToken == null) {
-            throw new RuntimeException(AuthErrorMessages.INVALID_REFRESH_TOKEN.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    AuthErrorMessages.INVALID_REFRESH_TOKEN.getMessage()
+            );
         }
         if (!jwtToken.equalsAccessToken(prevAccessToken)) {
-            throw new RuntimeException(AuthErrorMessages.INCONSISTENT_ACCESS_TOKEN.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    AuthErrorMessages.INCONSISTENT_ACCESS_TOKEN.getMessage()
+            );
         }
 
         AuthToken refreshToken = authTokenProvider.createRefreshTokenOf(prevRefreshToken);
         if(!refreshToken.validate()) {
-            throw new RuntimeException(AuthErrorMessages.EXPIRED_REFRESH_TOKEN.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    AuthErrorMessages.EXPIRED_REFRESH_TOKEN.getMessage()
+            );
         }
 
         AuthToken newAccessToken = authTokenProvider.publishAccessToken(jwtToken.getUser().getEmail(), RoleType.USER.getCode());

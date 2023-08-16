@@ -1,6 +1,7 @@
 package com.nimble.server_spring.infra.config;
 
 import com.nimble.server_spring.infra.jwt.JwtAuthenticationFilter;
+import com.nimble.server_spring.infra.security.JwtAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,7 @@ import org.springframework.web.filter.CorsFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CorsFilter corsFilter;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
     @Bean
     AuthenticationManager authenticationManager(
@@ -39,17 +41,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity, JwtAuthenticationFilter customJwtFilter) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
-
+                .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(configurer -> configurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .exceptionHandling(configurer -> configurer
+                        .authenticationEntryPoint(jwtAuthEntryPoint)
                 )
 
                 .authorizeHttpRequests(configurer -> configurer
                         .requestMatchers("/api/auth/signup").permitAll()
                         .requestMatchers("/api/auth/login/**").permitAll()
                         .requestMatchers("/api/auth/refresh").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
 

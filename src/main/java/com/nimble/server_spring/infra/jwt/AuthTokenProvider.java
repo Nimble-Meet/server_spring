@@ -1,11 +1,14 @@
 package com.nimble.server_spring.infra.jwt;
 
+import com.nimble.server_spring.modules.auth.AuthErrorMessages;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Key;
 import java.util.Collection;
@@ -61,7 +64,10 @@ public class AuthTokenProvider {
 
             return new UsernamePasswordAuthenticationToken(principal, authToken, authorities);
         } else {
-            throw new RuntimeException("Failed to generate Token.");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    AuthErrorMessages.INVALID_AUTH_TOKEN.getMessage()
+            );
         }
     }
 }
