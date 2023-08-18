@@ -114,4 +114,20 @@ public class AuthController {
         return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<UserResponseDto> logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        User currentUser = authService.getCurrentUser();
+        UserResponseDto userResponseDto = UserResponseDto.builder()
+                .email(currentUser.getEmail())
+                .nickname(currentUser.getNickname())
+                .providerType(currentUser.getProviderType())
+                .build();
+
+        CookieUtils.deleteCookie(request, response, ACCESS_TOKEN_KEY);
+        CookieUtils.deleteCookie(request, response, REFRESH_TOKEN_KEY);
+        return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
+    }
 }

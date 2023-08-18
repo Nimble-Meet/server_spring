@@ -28,4 +28,20 @@ public class CookieUtils {
 
         response.addCookie(cookie);
     }
+
+    public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null && cookies.length > 0) {
+            Arrays.stream(cookies)
+                    .filter(cookie -> cookie.getName().equals(name))
+                    .forEach(cookie -> {
+                        cookie.setValue("");
+                        cookie.setValue("");
+                        cookie.setMaxAge(0);
+                        cookie.setPath("/");
+                        response.addCookie(cookie);
+                    });
+        }
+    }
 }
