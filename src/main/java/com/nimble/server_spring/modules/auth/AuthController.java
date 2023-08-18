@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,7 +38,7 @@ public class AuthController {
     private final JwtProperties jwtProperties;
 
     @PostMapping("/signup")
-    public ResponseEntity signup(
+    public ResponseEntity<UserResponseDto> signup(
             @RequestBody LocalSignupRequestDto localSignupDto
             ) {
         User user = authService.signup(localSignupDto);
@@ -47,11 +48,11 @@ public class AuthController {
                 .nickname(user.getNickname())
                 .providerType(user.getProviderType())
                 .build();
-        return new ResponseEntity(userResponseDto, HttpStatus.CREATED);
+        return new ResponseEntity<>(userResponseDto, HttpStatus.CREATED);
     }
 
     @PostMapping("/login/local")
-    public ResponseEntity login(
+    public ResponseEntity<LoginResponseDto> login(
             HttpServletRequest request,
             HttpServletResponse response,
             @RequestBody LocalLoginRequestDto localLoginDto
@@ -67,7 +68,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity refresh(
+    public ResponseEntity<LoginResponseDto> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -97,8 +98,20 @@ public class AuthController {
     }
 
     private void setJwtTokenCookie(HttpServletResponse response, JwtToken jwtToken) {
-        CookieUtils.addCookie(response, ACCESS_TOKEN_KEY, jwtToken.getAccessToken(), jwtProperties.getAccessTokenExpiry());
-        CookieUtils.addCookie(response, REFRESH_TOKEN_KEY, jwtToken.getRefreshToken(), jwtProperties.getRefreshTokenExpiry());
+        // access token의 경우 프론트엔드 단에서 읽을 수 있게 하기 위해 http only를 false로 설정
+        CookieUtils.addCookie(response, ACCESS_TOKEN_KEY, jwtToken.getAccessToken(), jwtProperties.getAccessTokenExpiry(), false);
+        CookieUtils.addCookie(response, REFRESH_TOKEN_KEY, jwtToken.getRefreshToken(), jwtProperties.getRefreshTokenExpiry(), true);
+    }
+
+    @GetMapping("/whoami")
+    public ResponseEntity<UserResponseDto> whoami() {
+        User currentUser = authService.getCurrentUser();
+        UserResponseDto userResponseDto = UserResponseDto.builder()
+                .email(currentUser.getEmail())
+                .nickname(currentUser.getNickname())
+                .providerType(currentUser.getProviderType())
+                .build();
+        return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
     }
 
 }
