@@ -1,3 +1,5 @@
+server:
+  port: 3001
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
@@ -15,3 +17,7 @@ jwt:
   accessTokenExpiry: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
   refreshTokenExpiry: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
   refreshTokenSecret: ${JWT_REFRESH_TOKEN_SECRET}
+
+logging:
+  level:
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
