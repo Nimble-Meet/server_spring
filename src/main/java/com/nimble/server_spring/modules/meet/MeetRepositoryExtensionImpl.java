@@ -38,4 +38,24 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
                 .fetch();
         return meetList;
     }
+
+    @Override
+    public Meet findMeetByIdIfHostedOrInvited(Long meetId, Long userId) {
+        QMeet meet = QMeet.meet;
+        QUser host = QUser.user;
+        QMeetMember meetMember = QMeetMember.meetMember;
+        QUser member = new QUser("member");
+
+        Meet fetchedMeet = jpaQueryFactory.selectFrom(meet)
+                .leftJoin(meet.host, host)
+                .leftJoin(meet.meetMembers, meetMember)
+                .leftJoin(meetMember.user, member)
+                .where(meet.id.eq(meetId)
+                        .and(host.id.eq(userId)
+                                .or(member.id.eq(userId))
+                        )
+                )
+                .fetchOne();
+        return fetchedMeet;
+    }
 }
