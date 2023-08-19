@@ -7,11 +7,12 @@ import lombok.Setter;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.validation.annotation.Validated;
 
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Validated
 @ParameterObject
 public class LocalSignupRequestDto extends LocalLoginRequestDto {
-    private String nickname;
+
+  private String nickname;
 }
