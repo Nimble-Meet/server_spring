@@ -1,0 +1,23 @@
+server:
+  port: 3001
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://${DATABASE_HOST}:3306/${DATABASE_NAME}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: update
+jwt:
+  accessTokenSecret: ${JWT_ACCESS_TOKEN_SECRET}
+  accessTokenExpiry: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+  refreshTokenExpiry: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+  refreshTokenSecret: ${JWT_REFRESH_TOKEN_SECRET}
+
+logging:
+  level:
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
