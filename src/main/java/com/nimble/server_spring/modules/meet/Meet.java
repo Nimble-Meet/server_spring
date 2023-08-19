@@ -14,38 +14,47 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@EqualsAndHashCode(of = "id")
-@Builder @AllArgsConstructor @NoArgsConstructor
 @Getter
+@ToString
+@EqualsAndHashCode(of = "id")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Meet {
-    @Id @GeneratedValue
-    private Long id;
 
-    @Column
-    @NotNull
-    @CreatedDate
-    private LocalDateTime createdAt;
+  @Id
+  @GeneratedValue
+  private Long id;
 
-    @Column
-    @NotNull
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+  @Column
+  @NotNull
+  @CreatedDate
+  private LocalDateTime createdAt;
 
-    @Column
-    @NotNull
-    @Length(min = 2, max = 24)
-    private String meetName;
+  @Column
+  @NotNull
+  @LastModifiedDate
+  private LocalDateTime updatedAt;
 
-    @Column
-    @Length(max = 48)
-    private String description;
+  @Column
+  @NotNull
+  @Length(min = 2, max = 24)
+  private String meetName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull
-    @JoinColumn(name = "hostId")
-    private User host;
+  @Column
+  @Length(max = 48)
+  private String description;
 
-    @OneToMany(mappedBy = "meet", cascade = CascadeType.ALL)
-    private List<MeetMember> meetMembers = new ArrayList<>();
+  @ManyToOne(fetch = FetchType.LAZY)
+  @NotNull
+  @JoinColumn(name = "hostId")
+  private User host;
+
+  @OneToMany(mappedBy = "meet", cascade = CascadeType.ALL)
+  private List<MeetMember> meetMembers = new ArrayList<>();
+
+  public boolean isHost(Long userId) {
+    return this.host.getId().equals(userId);
+  }
 }
