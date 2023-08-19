@@ -23,114 +23,128 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 @Service
 public class AuthService {
-    private final JwtTokenRepository jwtTokenRepository;
-    private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
-    private final AuthTokenProvider authTokenProvider;
 
-    @Transactional
-    public User signup(LocalSignupRequestDto localSignupDto) {
-        boolean isEmailAlreadyExists = userRepository.existsByEmail(
-                localSignupDto.getEmail()
-        );
-        if (isEmailAlreadyExists) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, AuthErrorMessages.EMAIL_ALREADY_EXISTS.getMessage());
-        }
+  private final JwtTokenRepository jwtTokenRepository;
+  private final UserRepository userRepository;
+  private final AuthenticationManager authenticationManager;
+  private final AuthTokenProvider authTokenProvider;
 
-        EncryptedPassword encryptedPassword = EncryptedPassword.encryptFrom(localSignupDto.getPassword());
-
-        User user = User.builder()
-                .email(localSignupDto.getEmail())
-                .nickname(localSignupDto.getNickname())
-                .password(encryptedPassword.getPassword())
-                .providerType(OauthProvider.LOCAL)
-                .build();
-
-        return userRepository.save(user);
+  @Transactional
+  public User signup(LocalSignupRequestDto localSignupDto) {
+    boolean isEmailAlreadyExists = userRepository.existsByEmail(
+        localSignupDto.getEmail()
+    );
+    if (isEmailAlreadyExists) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT,
+          AuthErrorMessages.EMAIL_ALREADY_EXISTS.getMessage());
     }
 
-    @Transactional
-    public JwtToken jwtSign(LocalLoginRequestDto localLoginDto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        localLoginDto.getEmail(),
-                        localLoginDto.getPassword()
-                )
-        );
-        String role = ((UserPrincipal) authentication.getPrincipal()).getRoleType().getCode();
+    EncryptedPassword encryptedPassword = EncryptedPassword.encryptFrom(
+        localSignupDto.getPassword());
 
-        AuthToken accessToken = authTokenProvider.publishAccessToken(
-                localLoginDto.getEmail(),
-                role
-        );
-        AuthToken refreshToken = authTokenProvider.publishRefreshToken(localLoginDto.getEmail());
+    User user = User.builder()
+        .email(localSignupDto.getEmail())
+        .nickname(localSignupDto.getNickname())
+        .password(encryptedPassword.getPassword())
+        .providerType(OauthProvider.LOCAL)
+        .build();
 
-        User findUser = userRepository.findOneByEmail(localLoginDto.getEmail());
-        JwtToken findJwtToken = jwtTokenRepository.findOneByUserId(findUser.getId());
-        JwtToken jwtToken = JwtToken.builder()
-                .id(findJwtToken != null ? findJwtToken.getId() : null)
-                .accessToken(accessToken.getToken())
-                .refreshToken(refreshToken.getToken())
-                .expiresAt(refreshToken.getExpiresAt())
-                .user(findUser)
-                .build();
+    return userRepository.save(user);
+  }
 
-        return jwtTokenRepository.save(jwtToken);
+  @Transactional
+  public JwtToken jwtSign(LocalLoginRequestDto localLoginDto) {
+    Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(
+            localLoginDto.getEmail(),
+            localLoginDto.getPassword()
+        )
+    );
+    String role = ((UserPrincipal) authentication.getPrincipal()).getRoleType().getCode();
+
+    AuthToken accessToken = authTokenProvider.publishAccessToken(
+        localLoginDto.getEmail(),
+        role
+    );
+    AuthToken refreshToken = authTokenProvider.publishRefreshToken(localLoginDto.getEmail());
+
+    User findUser = userRepository.findOneByEmail(localLoginDto.getEmail()).orElseThrow(
+        () -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            AuthErrorMessages.USER_NOT_FOUND.getMessage()
+        ));
+    JwtToken findJwtToken = jwtTokenRepository.findOneByUserId(findUser.getId());
+    JwtToken jwtToken = JwtToken.builder()
+        .id(findJwtToken != null ? findJwtToken.getId() : null)
+        .accessToken(accessToken.getToken())
+        .refreshToken(refreshToken.getToken())
+        .expiresAt(refreshToken.getExpiresAt())
+        .user(findUser)
+        .build();
+
+    return jwtTokenRepository.save(jwtToken);
+  }
+
+  public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
+    JwtToken jwtToken = jwtTokenRepository.findOneByRefreshToken(prevRefreshToken);
+    if (jwtToken == null) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED,
+          AuthErrorMessages.INVALID_REFRESH_TOKEN.getMessage()
+      );
+    }
+    if (!jwtToken.equalsAccessToken(prevAccessToken)) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED,
+          AuthErrorMessages.INCONSISTENT_ACCESS_TOKEN.getMessage()
+      );
     }
 
-    public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
-        JwtToken jwtToken = jwtTokenRepository.findOneByRefreshToken(prevRefreshToken);
-        if (jwtToken == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    AuthErrorMessages.INVALID_REFRESH_TOKEN.getMessage()
-            );
-        }
-        if (!jwtToken.equalsAccessToken(prevAccessToken)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    AuthErrorMessages.INCONSISTENT_ACCESS_TOKEN.getMessage()
-            );
-        }
-
-        AuthToken refreshToken = authTokenProvider.createRefreshTokenOf(prevRefreshToken);
-        if(!refreshToken.validate()) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    AuthErrorMessages.EXPIRED_REFRESH_TOKEN.getMessage()
-            );
-        }
-
-        AuthToken newAccessToken = authTokenProvider.publishAccessToken(jwtToken.getUser().getEmail(), RoleType.USER.getCode());
-        AuthToken newRefreshToken = authTokenProvider.publishRefreshToken(jwtToken.getUser().getEmail());
-
-        JwtToken newJwtToken = JwtToken.builder()
-                .id(jwtToken.getId())
-                .accessToken(newAccessToken.getToken())
-                .refreshToken(newRefreshToken.getToken())
-                .expiresAt(newRefreshToken.getExpiresAt())
-                .user(jwtToken.getUser())
-                .build();
-        return jwtTokenRepository.save(newJwtToken);
+    AuthToken refreshToken = authTokenProvider.createRefreshTokenOf(prevRefreshToken);
+    if (!refreshToken.validate()) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED,
+          AuthErrorMessages.EXPIRED_REFRESH_TOKEN.getMessage()
+      );
     }
 
-    public User getCurrentUser() {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    AuthToken newAccessToken = authTokenProvider.publishAccessToken(jwtToken.getUser().getEmail(),
+        RoleType.USER.getCode());
+    AuthToken newRefreshToken = authTokenProvider.publishRefreshToken(
+        jwtToken.getUser().getEmail());
 
-        if (authentication == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED
-            );
-        }
+    JwtToken newJwtToken = JwtToken.builder()
+        .id(jwtToken.getId())
+        .accessToken(newAccessToken.getToken())
+        .refreshToken(newRefreshToken.getToken())
+        .expiresAt(newRefreshToken.getExpiresAt())
+        .user(jwtToken.getUser())
+        .build();
+    return jwtTokenRepository.save(newJwtToken);
+  }
 
-        String username = null;
-        if (authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails springSecurityUser = (UserDetails) authentication.getPrincipal();
-            username = springSecurityUser.getUsername();
-        } else if (authentication.getPrincipal() instanceof String) {
-            username = (String) authentication.getPrincipal();
-        }
+  public User getCurrentUser() {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        return userRepository.findOneByEmail(username);
+    if (authentication == null) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED
+      );
     }
+
+    String username = null;
+    if (authentication.getPrincipal() instanceof UserDetails springSecurityUser) {
+      username = springSecurityUser.getUsername();
+    } else if (authentication.getPrincipal() instanceof String) {
+      username = (String) authentication.getPrincipal();
+    }
+
+    User user = userRepository.findOneByEmail(username).orElseThrow(
+        () -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            AuthErrorMessages.USER_NOT_FOUND.getMessage()
+        )
+    );
+    return user;
+  }
 }
