@@ -27,7 +27,7 @@ public class JwtToken {
     private LocalDateTime expiresAt;
 
     @OneToOne
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_id")
     private User user;
 
     boolean equalsAccessToken(String accessToken) {
