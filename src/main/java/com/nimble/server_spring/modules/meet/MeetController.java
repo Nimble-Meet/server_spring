@@ -27,7 +27,6 @@ public class MeetController {
   public ResponseEntity<List<MeetResponseDto>> getMeets() {
     User currentUser = authService.getCurrentUser();
     List<Meet> meetList = meetService.getHostedOrInvitedMeets(currentUser);
-    System.out.println(meetList.toString());
     List<MeetResponseDto> meetResponseDtoList = meetList.stream().map(MeetResponseDto::fromMeet)
         .toList();
     return new ResponseEntity<>(meetResponseDtoList, HttpStatus.OK);
@@ -70,6 +69,22 @@ public class MeetController {
         currentUser,
         meetId,
         meetInviteRequestDto
+    );
+
+    MemberResponseDto memberResponseDto = MemberResponseDto.fromMeetMember(meetMember);
+    return new ResponseEntity<>(memberResponseDto, HttpStatus.OK);
+  }
+
+  @DeleteMapping("/{meetId}/member/{memberId}")
+  public ResponseEntity<MemberResponseDto> kickOut(
+      @PathVariable Long meetId,
+      @PathVariable Long memberId
+  ) {
+    User currentUser = authService.getCurrentUser();
+    MeetMember meetMember = meetService.kickOut(
+        currentUser,
+        meetId,
+        memberId
     );
 
     MemberResponseDto memberResponseDto = MemberResponseDto.fromMeetMember(meetMember);

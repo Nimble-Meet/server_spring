@@ -5,4 +5,5 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 public interface MeetRepository extends JpaRepository<Meet, Long>, MeetRepositoryExtension {
+
 }

@@ -15,24 +15,25 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class MeetResponseDto {
-    private Long id;
-    private String meetName;
-    private String description;
-    private LocalDateTime createdAt;
-    private SimpleUserResponseDto host;
-    private List<SimpleUserResponseDto> members;
 
-    public static MeetResponseDto fromMeet(Meet meet) {
-        return MeetResponseDto.builder()
-                .id(meet.getId())
-                .meetName(meet.getMeetName())
-                .description(meet.getDescription())
-                .createdAt(meet.getCreatedAt())
-                .host(SimpleUserResponseDto.fromUser(meet.getHost()))
-                .members(meet.getMeetMembers().stream()
-                        .map(meetMember -> SimpleUserResponseDto.fromUser(meetMember.getUser()))
-                        .toList()
-                )
-                .build();
-    }
+  private Long id;
+  private String meetName;
+  private String description;
+  private LocalDateTime createdAt;
+  private SimpleUserResponseDto host;
+  private List<MemberResponseDto> members;
+
+  public static MeetResponseDto fromMeet(Meet meet) {
+    return MeetResponseDto.builder()
+        .id(meet.getId())
+        .meetName(meet.getMeetName())
+        .description(meet.getDescription())
+        .createdAt(meet.getCreatedAt())
+        .host(SimpleUserResponseDto.fromUser(meet.getHost()))
+        .members(meet.getMeetMembers().stream()
+            .map(MemberResponseDto::fromMeetMember)
+            .toList()
+        )
+        .build();
+  }
 }

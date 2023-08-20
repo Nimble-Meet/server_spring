@@ -12,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
-@ToString
 @EqualsAndHashCode(of = "id")
 @Builder
 @AllArgsConstructor
@@ -43,4 +42,13 @@ public class MeetMember {
   @NotNull
   @JoinColumn(name = "user_id")
   private User user;
+
+  @Override
+  public String toString() {
+    return "MeetMember{" +
+        "id=" + id +
+        ", createdAt=" + createdAt +
+        ", updatedAt=" + updatedAt +
+        '}';
+  }
 }

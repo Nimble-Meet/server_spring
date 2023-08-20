@@ -16,77 +16,104 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class MeetService {
-    private final MeetRepository meetRepository;
-    private final UserRepository userRepository;
-    private final MeetMemberRepository meetMemberRepository;
 
-    private static final int INVITE_LIMIT_NUMBER = 3;
+  private final MeetRepository meetRepository;
+  private final UserRepository userRepository;
+  private final MeetMemberRepository meetMemberRepository;
 
-    public List<Meet> getHostedOrInvitedMeets(User user) {
-        return meetRepository.findHostedOrInvitedMeetsByUserId(user.getId());
+  private static final int INVITE_LIMIT_NUMBER = 3;
+
+  public List<Meet> getHostedOrInvitedMeets(User user) {
+    return meetRepository.findHostedOrInvitedMeetsByUserId(user.getId());
+  }
+
+  public Meet createMeet(User user, MeetCreateRequestDto meetCreateRequestDto) {
+    Meet meet = Meet.builder()
+        .meetName(meetCreateRequestDto.getMeetName())
+        .description(meetCreateRequestDto.getDescription())
+        .host(user)
+        .meetMembers(new ArrayList<>())
+        .build();
+    return meetRepository.save(meet);
+  }
+
+  public Meet getMeet(User user, Long meetId) {
+    Meet findMeet = meetRepository.findMeetByIdIfHostedOrInvited(meetId, user.getId());
+    if (findMeet == null) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          MeetErrorMessages.MEET_NOT_FOUND.getMessage()
+      );
     }
 
-    public Meet createMeet(User user, MeetCreateRequestDto meetCreateRequestDto) {
-        Meet meet = Meet.builder()
-                .meetName(meetCreateRequestDto.getMeetName())
-                .description(meetCreateRequestDto.getDescription())
-                .host(user)
-                .meetMembers(new ArrayList<>())
-                .build();
-        return meetRepository.save(meet);
+    return findMeet;
+  }
+
+  public MeetMember invite(User currentUser, Long meetId,
+      MeetInviteRequestDto meetInviteRequestDto) {
+    Meet meet = meetRepository.findById(meetId).orElseThrow(() -> new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        MeetErrorMessages.MEET_NOT_FOUND.getMessage()
+    ));
+
+    if (!meet.isHost(currentUser.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          MeetErrorMessages.MEET_NOT_FOUND.getMessage()
+      );
     }
 
-    public Meet getMeet(User user, Long meetId) {
-        Meet findMeet = meetRepository.findMeetByIdIfHostedOrInvited(meetId, user.getId());
-        if (findMeet == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    MeetErrorMessages.MEET_NOT_FOUND.getMessage()
-            );
-        }
-
-        return findMeet;
+    if (meet.getMeetMembers().size() >= INVITE_LIMIT_NUMBER) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          MeetErrorMessages.MEET_INVITE_LIMIT_OVER.getMessage()
+      );
     }
 
-    public MeetMember invite(User currentUser, Long meetId, MeetInviteRequestDto meetInviteRequestDto) {
-        Meet meet = meetRepository.findById(meetId).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                MeetErrorMessages.MEET_NOT_FOUND.getMessage()
+    String email = meetInviteRequestDto.getEmail();
+    User userToInvite = userRepository.findOneByEmail(email)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            UserErrorMessages.USER_NOT_FOUND_BY_EMAIL.getMessage()
         ));
 
-        if (!meet.isHost(currentUser.getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    MeetErrorMessages.MEET_NOT_FOUND.getMessage()
-            );
-        }
-
-        if (meet.getMeetMembers().size() >= INVITE_LIMIT_NUMBER) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    MeetErrorMessages.MEET_INVITE_LIMIT_OVER.getMessage()
-            );
-        }
-
-        String email = meetInviteRequestDto.getEmail();
-        User userToInvite = userRepository.findOneByEmail(email).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                UserErrorMessages.USER_NOT_FOUND_BY_EMAIL.getMessage()
-        ));
-
-        boolean isUserInvited = meet.getMeetMembers().stream()
-                .anyMatch(meetToMember -> meetToMember.getUser().getEmail().equals(email));
-        if (isUserInvited) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                MeetErrorMessages.USER_ALREADY_INVITED.getMessage()
-            );
-        }
-
-        MeetMember meetMember = MeetMember.builder()
-                .meet(meet)
-                .user(userToInvite)
-                .build();
-        return meetMemberRepository.save(meetMember);
+    boolean isUserInvited = meet.getMeetMembers().stream()
+        .anyMatch(meetToMember -> meetToMember.getUser().getEmail().equals(email));
+    if (isUserInvited) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          MeetErrorMessages.USER_ALREADY_INVITED.getMessage()
+      );
     }
+
+    MeetMember meetMember = MeetMember.builder()
+        .meet(meet)
+        .user(userToInvite)
+        .build();
+    return meetMemberRepository.save(meetMember);
+  }
+
+  public MeetMember kickOut(User currentUser, Long meetId, Long memberId) {
+    Meet meet = meetRepository.findById(meetId).orElseThrow(() -> new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        MeetErrorMessages.MEET_NOT_FOUND.getMessage()
+    ));
+
+    if (!meet.isHost(currentUser.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          MeetErrorMessages.MEET_NOT_FOUND.getMessage()
+      );
+    }
+
+    MeetMember meetMember = meet.findMember(memberId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            MeetErrorMessages.MEMBER_NOT_FOUND.getMessage()
+        ));
+    meet.getMeetMembers().remove(meetMember);
+    meetMemberRepository.delete(meetMember);
+
+    return meetMember;
+  }
 }
