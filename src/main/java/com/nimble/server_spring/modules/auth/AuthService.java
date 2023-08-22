@@ -1,5 +1,6 @@
 package com.nimble.server_spring.modules.auth;
 
+import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
 import com.nimble.server_spring.infra.security.RoleType;
@@ -35,8 +36,7 @@ public class AuthService {
         localSignupDto.getEmail()
     );
     if (isEmailAlreadyExists) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT,
-          AuthErrorMessages.EMAIL_ALREADY_EXISTS.getMessage());
+      throw new ErrorCodeException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
     }
 
     EncryptedPassword encryptedPassword = EncryptedPassword.encryptFrom(
@@ -69,10 +69,7 @@ public class AuthService {
     AuthToken refreshToken = authTokenProvider.publishRefreshToken(localLoginDto.getEmail());
 
     User findUser = userRepository.findOneByEmail(localLoginDto.getEmail()).orElseThrow(
-        () -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            AuthErrorMessages.USER_NOT_FOUND.getMessage()
-        ));
+        () -> new ErrorCodeException(AuthErrorCode.USER_NOT_FOUND));
     JwtToken findJwtToken = jwtTokenRepository.findOneByUserId(findUser.getId());
     JwtToken jwtToken = JwtToken.builder()
         .id(findJwtToken != null ? findJwtToken.getId() : null)
@@ -88,24 +85,15 @@ public class AuthService {
   public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
     JwtToken jwtToken = jwtTokenRepository.findOneByRefreshToken(prevRefreshToken);
     if (jwtToken == null) {
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED,
-          AuthErrorMessages.INVALID_REFRESH_TOKEN.getMessage()
-      );
+      throw new ErrorCodeException(AuthErrorCode.INVALID_REFRESH_TOKEN);
     }
     if (!jwtToken.equalsAccessToken(prevAccessToken)) {
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED,
-          AuthErrorMessages.INCONSISTENT_ACCESS_TOKEN.getMessage()
-      );
+      throw new ErrorCodeException(AuthErrorCode.INCONSISTENT_ACCESS_TOKEN);
     }
 
     AuthToken refreshToken = authTokenProvider.createRefreshTokenOf(prevRefreshToken);
     if (!refreshToken.validate()) {
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED,
-          AuthErrorMessages.EXPIRED_REFRESH_TOKEN.getMessage()
-      );
+      throw new ErrorCodeException(AuthErrorCode.EXPIRED_REFRESH_TOKEN);
     }
 
     AuthToken newAccessToken = authTokenProvider.publishAccessToken(jwtToken.getUser().getEmail(),
@@ -127,9 +115,7 @@ public class AuthService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (authentication == null) {
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED
-      );
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
 
     String username = null;
@@ -140,10 +126,7 @@ public class AuthService {
     }
 
     User user = userRepository.findOneByEmail(username).orElseThrow(
-        () -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            AuthErrorMessages.USER_NOT_FOUND.getMessage()
-        )
+        () -> new ErrorCodeException(AuthErrorCode.USER_NOT_FOUND)
     );
     return user;
   }

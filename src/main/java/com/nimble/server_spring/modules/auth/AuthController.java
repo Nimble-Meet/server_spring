@@ -1,5 +1,6 @@
 package com.nimble.server_spring.modules.auth;
 
+import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
 import com.nimble.server_spring.infra.properties.JwtProperties;
 import com.nimble.server_spring.infra.utils.CookieUtils;
@@ -17,15 +18,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @EnableConfigurationProperties(JwtProperties.class)
@@ -75,18 +75,12 @@ public class AuthController {
       HttpServletResponse response
   ) {
     Cookie refreshTokenCookie = CookieUtils.getCookie(request, REFRESH_TOKEN_KEY)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            AuthErrorMessages.REFRESH_TOKEN_DOES_NOT_EXIST.getMessage()
-        ));
+        .orElseThrow(() -> new ErrorCodeException(AuthErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
     String refreshToken = refreshTokenCookie.getValue();
 
     String accessToken = HeaderUtils.resolveBearerTokenFrom(request);
     if (accessToken == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          AuthErrorMessages.ACCESS_TOKEN_DOES_NOT_EXIST.getMessage()
-      );
+      throw new ErrorCodeException(AuthErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST);
     }
 
     JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);
