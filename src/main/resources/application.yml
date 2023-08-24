@@ -22,3 +22,10 @@ jwt:
 logging:
   level:
     org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+
+springdoc:
+  swagger-ui:
+    operations-sorter: alpha
+    disable-swagger-default-url: true
+  api-docs:
+    path: /api-docs

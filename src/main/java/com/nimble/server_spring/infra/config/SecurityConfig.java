@@ -23,44 +23,47 @@ import org.springframework.web.filter.CorsFilter;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final CorsFilter corsFilter;
-    private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
-    @Bean
-    AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+  private final CorsFilter corsFilter;
+  private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  AuthenticationManager authenticationManager(
+      AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    return authenticationConfiguration.getAuthenticationManager();
+  }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, JwtAuthenticationFilter customJwtFilter) throws Exception {
-        httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .sessionManagement(configurer -> configurer
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-                .exceptionHandling(configurer -> configurer
-                        .authenticationEntryPoint(jwtAuthEntryPoint)
-                )
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity httpSecurity,
+      JwtAuthenticationFilter customJwtFilter) throws Exception {
+    httpSecurity
+        .csrf(AbstractHttpConfigurer::disable)
+        .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+        .formLogin(AbstractHttpConfigurer::disable)
+        .sessionManagement(configurer -> configurer
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
 
-                .authorizeHttpRequests(configurer -> configurer
-                        .requestMatchers("/api/auth/signup").permitAll()
-                        .requestMatchers("/api/auth/login/**").permitAll()
-                        .requestMatchers("/api/auth/refresh").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated()
-                )
+        .exceptionHandling(configurer -> configurer
+            .authenticationEntryPoint(jwtAuthEntryPoint)
+        )
 
-                .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
+        .authorizeHttpRequests(configurer -> configurer
+            .requestMatchers("/api/auth/signup").permitAll()
+            .requestMatchers("/api/auth/login/**").permitAll()
+            .requestMatchers("/api/auth/refresh").permitAll()
+            .requestMatchers("/error").permitAll()
+            .requestMatchers("/swagger-ui/**").permitAll()
+            .anyRequest().permitAll()
+        )
 
-        return httpSecurity.build();
-    }
+        .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return httpSecurity.build();
+  }
 }

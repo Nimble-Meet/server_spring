@@ -1,7 +1,6 @@
 package com.nimble.server_spring.modules.auth;
 
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
 import com.nimble.server_spring.infra.properties.JwtProperties;
 import com.nimble.server_spring.infra.utils.CookieUtils;
 import com.nimble.server_spring.infra.utils.HeaderUtils;
@@ -10,6 +9,8 @@ import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
 import com.nimble.server_spring.modules.auth.dto.response.UserResponseDto;
 import com.nimble.server_spring.modules.user.User;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,19 +29,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @EnableConfigurationProperties(JwtProperties.class)
+@Tag(name = "Auth", description = "인증 관련 API")
 public class AuthController {
 
   public static final String ACCESS_TOKEN_KEY = "access_token";
   public static final String REFRESH_TOKEN_KEY = "refresh_token";
 
   private final AuthService authService;
-  private final AuthenticationManager authenticationManager;
-  private final AuthTokenProvider authTokenProvider;
   private final JwtProperties jwtProperties;
 
   @PostMapping("/signup")
   public ResponseEntity<UserResponseDto> signup(
-      @RequestBody @Validated LocalSignupRequestDto localSignupDto
+      @RequestBody @Parameter(description = "회원 가입 정보", required = true)
+      LocalSignupRequestDto localSignupDto
   ) {
     User user = authService.signup(localSignupDto);
 
@@ -55,9 +55,9 @@ public class AuthController {
 
   @PostMapping("/login/local")
   public ResponseEntity<LoginResponseDto> login(
-      HttpServletRequest request,
       HttpServletResponse response,
-      @RequestBody LocalLoginRequestDto localLoginDto
+      @RequestBody @Parameter(description = "로그인 정보", required = true)
+      LocalLoginRequestDto localLoginDto
   ) {
     JwtToken jwtToken = authService.jwtSign(localLoginDto);
 

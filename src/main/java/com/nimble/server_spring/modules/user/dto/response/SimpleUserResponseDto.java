@@ -1,6 +1,7 @@
 package com.nimble.server_spring.modules.user.dto.response;
 
 import com.nimble.server_spring.modules.user.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,13 +12,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class SimpleUserResponseDto {
-    private String email;
-    private String nickname;
 
-    public static SimpleUserResponseDto fromUser(User user) {
-        return SimpleUserResponseDto.builder()
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .build();
-    }
+  @Schema(example = "user@email.com", description = "사용자 이메일")
+  private String email;
+
+  @Schema(example = "UserNickname", description = "사용자 닉네임")
+  private String nickname;
+
+  public static SimpleUserResponseDto fromUser(User user) {
+    return SimpleUserResponseDto.builder()
+        .email(user.getEmail())
+        .nickname(user.getNickname())
+        .build();
+  }
 }
