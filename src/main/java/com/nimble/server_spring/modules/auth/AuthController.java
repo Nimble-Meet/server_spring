@@ -1,5 +1,7 @@
 package com.nimble.server_spring.modules.auth;
 
+import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
+
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.properties.JwtProperties;
 import com.nimble.server_spring.infra.utils.CookieUtils;
@@ -9,7 +11,9 @@ import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
 import com.nimble.server_spring.modules.auth.dto.response.UserResponseDto;
 import com.nimble.server_spring.modules.user.User;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +42,7 @@ public class AuthController {
   private final JwtProperties jwtProperties;
 
   @PostMapping("/signup")
+  @Operation(summary = "이메일 + 비밀 번호 회원 가입", description = "이메일 + 비밀번호로 회원 가입을 합니다.")
   public ResponseEntity<UserResponseDto> signup(
       @RequestBody @Parameter(description = "회원 가입 정보", required = true)
       LocalSignupRequestDto localSignupDto
@@ -54,6 +58,7 @@ public class AuthController {
   }
 
   @PostMapping("/login/local")
+  @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
   public ResponseEntity<LoginResponseDto> login(
       HttpServletResponse response,
       @RequestBody @Parameter(description = "로그인 정보", required = true)
@@ -70,6 +75,8 @@ public class AuthController {
   }
 
   @PostMapping("/refresh")
+  @Operation(summary = "Access Token 토큰 갱신", description = "refresh token 유효성 검증 후 access token을 갱신합니다.")
+  @SecurityRequirement(name = JWT_ACCESS_TOKEN)
   public ResponseEntity<LoginResponseDto> refresh(
       HttpServletRequest request,
       HttpServletResponse response
@@ -102,6 +109,8 @@ public class AuthController {
   }
 
   @GetMapping("/whoami")
+  @Operation(summary = "현재 사용자 정보 조회", description = "현재 사용자 정보를 조회합니다.")
+  @SecurityRequirement(name = JWT_ACCESS_TOKEN)
   public ResponseEntity<UserResponseDto> whoami() {
     User currentUser = authService.getCurrentUser();
     UserResponseDto userResponseDto = UserResponseDto.builder()
@@ -113,6 +122,7 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
+  @Operation(summary = "로그아웃", description = "쿠키의 access token과 refresh token을 삭제 하여 로그아웃 합니다.")
   public ResponseEntity<UserResponseDto> logout(
       HttpServletRequest request,
       HttpServletResponse response

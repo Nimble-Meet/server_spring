@@ -1,5 +1,7 @@
 package com.nimble.server_spring.modules.meet;
 
+import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
+
 import com.nimble.server_spring.modules.auth.AuthService;
 import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequestDto;
 import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequestDto;
@@ -8,6 +10,7 @@ import com.nimble.server_spring.modules.meet.dto.response.MemberResponseDto;
 import com.nimble.server_spring.modules.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,13 +23,14 @@ import java.util.List;
 @RequestMapping("/api/meet")
 @RequiredArgsConstructor
 @Tag(name = "Meet", description = "미팅 관련 API")
+@SecurityRequirement(name = JWT_ACCESS_TOKEN)
 public class MeetController {
 
   private final AuthService authService;
   private final MeetService meetService;
 
   @GetMapping
-  @Operation(summary = "내가 생성한 미팅과 초대 받은 미팅을 조회합니다.")
+  @Operation(summary = "미팅 목록 조회", description = "내가 생성했거나 초대 받은 미팅을 조회합니다.")
   public ResponseEntity<List<MeetResponseDto>> getMeets() {
     User currentUser = authService.getCurrentUser();
     List<Meet> meetList = meetService.getHostedOrInvitedMeets(currentUser);
@@ -36,7 +40,7 @@ public class MeetController {
   }
 
   @PostMapping
-  @Operation(summary = "미팅을 생성합니다.")
+  @Operation(summary = "미팅 생성", description = "미팅 생성 정보를 이용해서 미팅을 생성합니다.")
   public ResponseEntity<MeetResponseDto> createMeet(
       @RequestBody @Parameter(description = "미팅 생성 정보", required = true)
       MeetCreateRequestDto meetCreateRequestDto
@@ -51,7 +55,7 @@ public class MeetController {
   }
 
   @GetMapping("/{meetId}")
-  @Operation(summary = "특정 미팅을 조회합니다.")
+  @Operation(summary = "미팅 조회", description = "특정 미팅을 조회합니다.")
   public ResponseEntity<MeetResponseDto> getMeet(
       @PathVariable @Parameter(description = "조회할 미팅의 ID", required = true)
       Long meetId
@@ -67,7 +71,7 @@ public class MeetController {
   }
 
   @PostMapping("/{meetId}/member")
-  @Operation(summary = "특정 미팅에 멤버를 초대합니다.")
+  @Operation(summary = "멤버 초대", description = "email에 해당하는 사용자를 특정 미팅에 초대합니다.")
   public ResponseEntity<MemberResponseDto> invite(
       @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
       Long meetId,
@@ -86,7 +90,7 @@ public class MeetController {
   }
 
   @DeleteMapping("/{meetId}/member/{memberId}")
-  @Operation(summary = "특정 미팅에서 멤버를 강퇴합니다.")
+  @Operation(summary = "멤버 강퇴", description = "특정 미팅에서 멤버를 강퇴합니다.")
   public ResponseEntity<MemberResponseDto> kickOut(
       @PathVariable @Parameter(description = "멤버를 강퇴할 미팅의 ID", required = true)
       Long meetId,
