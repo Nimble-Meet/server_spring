@@ -1,6 +1,5 @@
 package com.nimble.server_spring.infra.config;
 
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.security.SecurityScheme.Type;
@@ -20,10 +19,6 @@ public class SwaggerConfig {
         .name(JWT_ACCESS_TOKEN)
         .type(Type.HTTP)
         .scheme("Bearer");
-    Components bearerAuthComponents = new Components().addSecuritySchemes(
-        JWT_ACCESS_TOKEN,
-        bearerSecurityScheme
-    );
 
     return GroupedOpenApi.builder()
         .group("public")
@@ -31,7 +26,11 @@ public class SwaggerConfig {
         .addOpenApiCustomizer(
             openApi -> openApi.info(new Info().title("Nimble Meet API Docs").version("0.0.1")))
         // Bearer Auth 설정 버튼 생성
-        .addOpenApiCustomizer(openApi -> openApi.components(bearerAuthComponents))
+        .addOpenApiCustomizer(
+            openApi -> openApi.components(openApi.getComponents().addSecuritySchemes(
+                JWT_ACCESS_TOKEN,
+                bearerSecurityScheme
+            )))
         .build();
   }
 }
