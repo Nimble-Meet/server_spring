@@ -43,6 +43,10 @@ public class AuthController {
 
   @PostMapping("/signup")
   @Operation(summary = "이메일 + 비밀 번호 회원 가입", description = "이메일 + 비밀번호로 회원 가입을 합니다.")
+  @ApiAuthErrorCodes({
+      AuthErrorCode.EMAIL_ALREADY_EXISTS,
+      AuthErrorCode.NOT_SHA256_ENCRYPTED
+  })
   public ResponseEntity<UserResponseDto> signup(
       @RequestBody @Parameter(description = "회원 가입 정보", required = true)
       LocalSignupRequestDto localSignupDto
@@ -59,6 +63,10 @@ public class AuthController {
 
   @PostMapping("/login/local")
   @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
+  @ApiAuthErrorCodes({
+      AuthErrorCode.LOGIN_FAILED,
+      AuthErrorCode.USER_NOT_FOUND,
+  })
   public ResponseEntity<LoginResponseDto> login(
       HttpServletResponse response,
       @RequestBody @Parameter(description = "로그인 정보", required = true)
@@ -76,6 +84,13 @@ public class AuthController {
 
   @PostMapping("/refresh")
   @Operation(summary = "Access Token 토큰 갱신", description = "refresh token 유효성 검증 후 access token을 갱신합니다.")
+  @ApiAuthErrorCodes({
+      AuthErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST,
+      AuthErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST,
+      AuthErrorCode.INVALID_REFRESH_TOKEN,
+      AuthErrorCode.INCONSISTENT_ACCESS_TOKEN,
+      AuthErrorCode.EXPIRED_REFRESH_TOKEN,
+  })
   @SecurityRequirement(name = JWT_ACCESS_TOKEN)
   public ResponseEntity<LoginResponseDto> refresh(
       HttpServletRequest request,
