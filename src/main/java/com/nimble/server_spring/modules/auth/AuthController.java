@@ -2,6 +2,8 @@ package com.nimble.server_spring.modules.auth;
 
 import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
 
+import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
+import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.properties.JwtProperties;
 import com.nimble.server_spring.infra.utils.CookieUtils;
@@ -43,9 +45,9 @@ public class AuthController {
 
   @PostMapping("/signup")
   @Operation(summary = "이메일 + 비밀 번호 회원 가입", description = "이메일 + 비밀번호로 회원 가입을 합니다.")
-  @ApiAuthErrorCodes({
-      AuthErrorCode.EMAIL_ALREADY_EXISTS,
-      AuthErrorCode.NOT_SHA256_ENCRYPTED
+  @ApiErrorCodes({
+      ErrorCode.EMAIL_ALREADY_EXISTS,
+      ErrorCode.NOT_SHA256_ENCRYPTED
   })
   public ResponseEntity<UserResponseDto> signup(
       @RequestBody @Parameter(description = "회원 가입 정보", required = true)
@@ -63,9 +65,9 @@ public class AuthController {
 
   @PostMapping("/login/local")
   @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
-  @ApiAuthErrorCodes({
-      AuthErrorCode.LOGIN_FAILED,
-      AuthErrorCode.USER_NOT_FOUND,
+  @ApiErrorCodes({
+      ErrorCode.LOGIN_FAILED,
+      ErrorCode.USER_NOT_FOUND,
   })
   public ResponseEntity<LoginResponseDto> login(
       HttpServletResponse response,
@@ -84,12 +86,12 @@ public class AuthController {
 
   @PostMapping("/refresh")
   @Operation(summary = "Access Token 토큰 갱신", description = "refresh token 유효성 검증 후 access token을 갱신합니다.")
-  @ApiAuthErrorCodes({
-      AuthErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST,
-      AuthErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST,
-      AuthErrorCode.INVALID_REFRESH_TOKEN,
-      AuthErrorCode.INCONSISTENT_ACCESS_TOKEN,
-      AuthErrorCode.EXPIRED_REFRESH_TOKEN,
+  @ApiErrorCodes({
+      ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST,
+      ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST,
+      ErrorCode.INVALID_REFRESH_TOKEN,
+      ErrorCode.INCONSISTENT_ACCESS_TOKEN,
+      ErrorCode.EXPIRED_REFRESH_TOKEN,
   })
   @SecurityRequirement(name = JWT_ACCESS_TOKEN)
   public ResponseEntity<LoginResponseDto> refresh(
@@ -97,12 +99,12 @@ public class AuthController {
       HttpServletResponse response
   ) {
     Cookie refreshTokenCookie = CookieUtils.getCookie(request, REFRESH_TOKEN_KEY)
-        .orElseThrow(() -> new ErrorCodeException(AuthErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
+        .orElseThrow(() -> new ErrorCodeException(ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
     String refreshToken = refreshTokenCookie.getValue();
 
     String accessToken = HeaderUtils.resolveBearerTokenFrom(request);
     if (accessToken == null) {
-      throw new ErrorCodeException(AuthErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST);
+      throw new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST);
     }
 
     JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);

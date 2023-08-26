@@ -2,6 +2,8 @@ package com.nimble.server_spring.modules.meet;
 
 import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
 
+import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
+import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.modules.auth.AuthService;
 import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequestDto;
 import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequestDto;
@@ -56,6 +58,9 @@ public class MeetController {
 
   @GetMapping("/{meetId}")
   @Operation(summary = "미팅 조회", description = "특정 미팅을 조회합니다.")
+  @ApiErrorCodes({
+      ErrorCode.MEET_NOT_FOUND
+  })
   public ResponseEntity<MeetResponseDto> getMeet(
       @PathVariable @Parameter(description = "조회할 미팅의 ID", required = true)
       Long meetId
@@ -72,6 +77,9 @@ public class MeetController {
 
   @PostMapping("/{meetId}/member")
   @Operation(summary = "멤버 초대", description = "email에 해당하는 사용자를 특정 미팅에 초대합니다.")
+  @ApiErrorCodes({
+      ErrorCode.MEET_NOT_FOUND
+  })
   public ResponseEntity<MemberResponseDto> invite(
       @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
       Long meetId,
@@ -91,6 +99,9 @@ public class MeetController {
 
   @DeleteMapping("/{meetId}/member/{memberId}")
   @Operation(summary = "멤버 강퇴", description = "특정 미팅에서 멤버를 강퇴합니다.")
+  @ApiErrorCodes({
+      ErrorCode.MEET_NOT_FOUND
+  })
   public ResponseEntity<MemberResponseDto> kickOut(
       @PathVariable @Parameter(description = "멤버를 강퇴할 미팅의 ID", required = true)
       Long meetId,

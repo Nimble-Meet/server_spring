@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.groupingBy;
 import com.nimble.server_spring.infra.apidoc.ApiExampleHolder;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorResponse;
-import com.nimble.server_spring.modules.auth.ApiAuthErrorCodes;
+import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.info.Info;
@@ -54,10 +54,10 @@ public class SwaggerConfig {
 
   public OperationCustomizer customize() {
     return (Operation operation, HandlerMethod handlerMethod) -> {
-      ApiAuthErrorCodes apiAuthErrorCodes = handlerMethod.getMethodAnnotation(
-          ApiAuthErrorCodes.class);
-      if (apiAuthErrorCodes != null) {
-        generateErrorCodeResponses(operation, apiAuthErrorCodes.value());
+      ApiErrorCodes apiErrorCodes = handlerMethod.getMethodAnnotation(
+          ApiErrorCodes.class);
+      if (apiErrorCodes != null) {
+        generateErrorCodeResponses(operation, apiErrorCodes.value());
       }
       return operation;
     };
