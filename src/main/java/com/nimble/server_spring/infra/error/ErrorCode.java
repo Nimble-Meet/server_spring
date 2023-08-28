@@ -27,10 +27,10 @@ public enum ErrorCode {
   NOT_SHA256_ENCRYPTED(AUTH, BAD_REQUEST, "sha256으로 인코딩된 문자열이 아닙니다."),
 
   // 401 UNAUTHORIZED
+  UNAUTHENTICATED_REQUEST(AUTH, UNAUTHORIZED, "인증되지 않은 요청입니다."),
   INVALID_REFRESH_TOKEN(AUTH, UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
   INCONSISTENT_ACCESS_TOKEN(AUTH, UNAUTHORIZED, "이전에 발급한 엑세스 토큰이 아닙니다."),
   EXPIRED_REFRESH_TOKEN(AUTH, UNAUTHORIZED, "리프레시 토큰이 만료되었습니다."),
-  INVALID_AUTH_TOKEN(AUTH, UNAUTHORIZED, "유효하지 않은 AuthToken 입니다."),
   LOGIN_FAILED(AUTH, UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다."),
 
   // 404 NOT_FOUND

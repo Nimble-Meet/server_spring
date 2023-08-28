@@ -54,18 +54,18 @@ public class AuthTokenProvider {
   }
 
   public Authentication getAuthentication(AuthToken authToken) {
-    if (authToken.validate()) {
-      Claims claims = authToken.getTokenClaims();
-
-      String role = claims.get(AuthToken.AUTHORITIES_KEY, String.class);
-      Collection<? extends SimpleGrantedAuthority> authorities = List.of(
-          new SimpleGrantedAuthority(role));
-
-      User principal = new User(claims.getSubject(), "", authorities);
-
-      return new UsernamePasswordAuthenticationToken(principal, authToken, authorities);
-    } else {
-      throw new ErrorCodeException(ErrorCode.INVALID_AUTH_TOKEN);
+    if (!authToken.validate()) {
+      return null;
     }
+    
+    Claims claims = authToken.getTokenClaims();
+
+    String role = claims.get(AuthToken.AUTHORITIES_KEY, String.class);
+    Collection<? extends SimpleGrantedAuthority> authorities = List.of(
+        new SimpleGrantedAuthority(role));
+
+    User principal = new User(claims.getSubject(), "", authorities);
+
+    return new UsernamePasswordAuthenticationToken(principal, authToken, authorities);
   }
 }
