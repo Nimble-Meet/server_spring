@@ -53,6 +53,7 @@ public class Meet {
   private User host;
 
   @OneToMany(mappedBy = "meet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @Builder.Default
   private List<MeetMember> meetMembers = new ArrayList<>();
 
   public boolean isHost(Long userId) {
