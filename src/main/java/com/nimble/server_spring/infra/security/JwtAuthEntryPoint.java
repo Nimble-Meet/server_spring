@@ -1,11 +1,11 @@
 package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
@@ -16,13 +16,10 @@ import java.io.IOException;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
 
   private final ObjectMapper objectMapper;
-
-  public JwtAuthEntryPoint() {
-    this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-  }
 
   @Override
   public void commence(

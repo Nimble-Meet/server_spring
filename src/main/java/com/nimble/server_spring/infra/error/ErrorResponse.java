@@ -3,10 +3,12 @@ package com.nimble.server_spring.infra.error;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 import org.springframework.http.ResponseEntity;
 
 @Getter
 @Builder
+@ToString
 public class ErrorResponse {
 
   private final LocalDateTime timestamp = LocalDateTime.now();
