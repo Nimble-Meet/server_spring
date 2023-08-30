@@ -1,19 +1,14 @@
-# Stage 1: Build the application
-FROM gradle:8.3.0-jdk17 as build
+FROM eclipse-temurin:17-jdk AS build
+WORKDIR /workspace/app
 
-WORKDIR /home/gradle/project
+COPY . /workspace/app
+RUN ./gradlew bootJar
+RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
 
-COPY . .
-
-RUN gradle wrapper
-
-RUN ./gradlew build -x test
-
-# Stage 2: Run the application
-FROM eclipse-temurin:17-jre
-
-WORKDIR /opt/nimble
-
-COPY --from=build /home/gradle/project/build/libs/server_spring-0.0.1.jar .
-
-CMD ["java", "-jar", "-Dspring.profiles.active=prod", "server_spring-0.0.1.jar"]
+FROM eclipse-temurin:17-jdk
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/build/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","com.nimble.server_spring.ServerSpringApplication"]
