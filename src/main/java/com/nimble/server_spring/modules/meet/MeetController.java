@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class MeetController {
   @PostMapping
   @Operation(summary = "미팅 생성", description = "미팅 생성 정보를 이용해서 미팅을 생성합니다.")
   public ResponseEntity<MeetResponseDto> createMeet(
-      @RequestBody @Parameter(description = "미팅 생성 정보", required = true)
+      @RequestBody @Validated @Parameter(description = "미팅 생성 정보", required = true)
       MeetCreateRequestDto meetCreateRequestDto
   ) {
     User currentUser = authService.getCurrentUser();
@@ -83,7 +84,7 @@ public class MeetController {
   public ResponseEntity<MemberResponseDto> invite(
       @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
       Long meetId,
-      @RequestBody @Parameter(description = "초대할 멤버의 정보", required = true)
+      @RequestBody @Validated @Parameter(description = "초대할 멤버의 정보", required = true)
       MeetInviteRequestDto meetInviteRequestDto
   ) {
     User currentUser = authService.getCurrentUser();

@@ -13,15 +13,11 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Validated
 public class LocalLoginRequestDto {
 
-  @NotNull
-  @Email
   @Schema(example = "user@email.com", description = "사용자 이메일")
   private String email;
 
-  @NotNull
-  @Schema(example = "password", description = "사용자 비밀번호")
+  @Schema(example = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4", description = "SHA256으로 암호화된 비밀번호")
   private String password;
 }

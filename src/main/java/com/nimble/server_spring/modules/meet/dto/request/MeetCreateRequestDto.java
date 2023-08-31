@@ -13,7 +13,6 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Validated
 public class MeetCreateRequestDto {
 
   @NotBlank

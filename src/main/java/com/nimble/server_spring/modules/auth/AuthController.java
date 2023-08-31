@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,7 +51,7 @@ public class AuthController {
       ErrorCode.NOT_SHA256_ENCRYPTED
   })
   public ResponseEntity<UserResponseDto> signup(
-      @RequestBody @Parameter(description = "회원 가입 정보", required = true)
+      @RequestBody @Validated @Parameter(description = "회원 가입 정보", required = true)
       LocalSignupRequestDto localSignupDto
   ) {
     User user = authService.signup(localSignupDto);
@@ -71,7 +72,7 @@ public class AuthController {
   })
   public ResponseEntity<LoginResponseDto> login(
       HttpServletResponse response,
-      @RequestBody @Parameter(description = "로그인 정보", required = true)
+      @RequestBody @Validated @Parameter(description = "로그인 정보", required = true)
       LocalLoginRequestDto localLoginDto
   ) {
     JwtToken jwtToken = authService.jwtSign(localLoginDto);
