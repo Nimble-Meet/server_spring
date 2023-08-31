@@ -1,5 +1,8 @@
 package com.nimble.server_spring.modules.auth;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public enum AuthErrorMessages {
     EMAIL_ALREADY_EXISTS("이미 존재하는 이메일입니다."),
 
@@ -19,10 +22,6 @@ public enum AuthErrorMessages {
     INVALID_AUTH_TOKEN("유효하지 않은 AuthToken 입니다.");
 
     private String message;
-
-    AuthErrorMessages(String message) {
-        this.message = message;
-    }
 
     public String getMessage() {
         return message;

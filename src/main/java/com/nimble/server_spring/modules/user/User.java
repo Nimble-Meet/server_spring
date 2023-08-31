@@ -13,36 +13,41 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@ToString @EqualsAndHashCode(of = "id")
-@Builder @AllArgsConstructor @NoArgsConstructor
+@ToString
+@EqualsAndHashCode(of = "id")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class User {
-    @Id @GeneratedValue
-    private Long id;
 
-    @Column(nullable = false)
-    @CreatedDate
-    private LocalDateTime createdAt;
+  @Id
+  @GeneratedValue
+  private Long id;
 
-    @Column(nullable = false)
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+  @Column(nullable = false)
+  @CreatedDate
+  private LocalDateTime createdAt;
 
-    @Column(unique = true, nullable = false)
-    @Email
-    private String email;
+  @Column(nullable = false)
+  @LastModifiedDate
+  private LocalDateTime updatedAt;
 
-    @BcryptEncrypted
-    private String password;
+  @Column(unique = true, nullable = false)
+  @Email
+  private String email;
 
-    @Column()
-    private String nickname;
+  @BcryptEncrypted
+  private String password;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private OauthProvider providerType = OauthProvider.LOCAL;
+  @Column()
+  private String nickname;
 
-    @Column(nullable = true)
-    private String providerId;
+  @Column
+  @Enumerated(EnumType.STRING)
+  @Builder.Default
+  private OauthProvider providerType = OauthProvider.LOCAL;
+
+  @Column(nullable = true)
+  private String providerId;
 }
