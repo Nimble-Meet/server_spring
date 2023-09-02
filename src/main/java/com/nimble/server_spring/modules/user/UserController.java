@@ -25,19 +25,19 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = JWT_ACCESS_TOKEN)
 public class UserController {
 
-  private final UserService userService;
+    private final UserService userService;
 
-  @GetMapping("/{email}")
-  @Operation(summary = "유저 조회", description = "이메일로 유저를 조회합니다.")
-  @ApiErrorCodes({
-      ErrorCode.USER_NOT_FOUND_BY_EMAIL
-  })
-  public ResponseEntity<SimpleUserResponseDto> getUserByEmail(
-      @PathVariable @Parameter(description = "이메일", required = true)
-      String email
-  ) {
-    User user = userService.getUserByEmail(email);
-    SimpleUserResponseDto simpleUserResponseDto = SimpleUserResponseDto.fromUser(user);
-    return new ResponseEntity<>(simpleUserResponseDto, HttpStatus.OK);
-  }
+    @GetMapping("/{email}")
+    @Operation(summary = "유저 조회", description = "이메일로 유저를 조회합니다.")
+    @ApiErrorCodes({
+            ErrorCode.USER_NOT_FOUND_BY_EMAIL
+    })
+    public ResponseEntity<SimpleUserResponseDto> getUserByEmail(
+            @PathVariable @Parameter(description = "이메일", required = true)
+            String email
+    ) {
+        User user = userService.getUserByEmail(email);
+        SimpleUserResponseDto simpleUserResponseDto = SimpleUserResponseDto.fromUser(user);
+        return new ResponseEntity<>(simpleUserResponseDto, HttpStatus.OK);
+    }
 }
