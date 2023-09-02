@@ -24,7 +24,7 @@ public class LocalSignupRequestDto {
   private String email;
 
   @NotNull
-  @Pattern(regexp = "/^[a-f0-9]{64}$/gi", message = "비밀번호는 SHA256으로 암호화된 문자열이어야 합니다.")
+  @Pattern(regexp = "[a-f0-9]{64}", message = "비밀번호는 SHA256으로 암호화된 문자열이어야 합니다.")
   @Schema(example = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4", description = "SHA256으로 암호화된 비밀번호")
   private String password;
 

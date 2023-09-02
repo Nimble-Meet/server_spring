@@ -37,7 +37,7 @@ public class User {
   @Email
   private String email;
 
-  @Pattern(regexp = "/^[a-f0-9]{64}$/gi", message = "비밀번호는 SHA256으로 암호화된 문자열이어야 합니다.")
+  @Pattern(regexp = "[a-f0-9]{64}", message = "비밀번호는 SHA256으로 암호화된 문자열이어야 합니다.")
   private String password;
 
   @Column()
