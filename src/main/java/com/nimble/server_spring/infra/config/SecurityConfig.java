@@ -1,7 +1,6 @@
 package com.nimble.server_spring.infra.config;
 
 import com.nimble.server_spring.infra.jwt.JwtAuthenticationFilter;
-import com.nimble.server_spring.infra.security.JwtAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +24,6 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig {
 
   private final CorsFilter corsFilter;
-  private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
   @Bean
   AuthenticationManager authenticationManager(
@@ -47,10 +45,6 @@ public class SecurityConfig {
         .formLogin(AbstractHttpConfigurer::disable)
         .sessionManagement(configurer -> configurer
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
-
-        .exceptionHandling(configurer -> configurer
-            .authenticationEntryPoint(jwtAuthEntryPoint)
         )
 
         .authorizeHttpRequests(configurer -> configurer
