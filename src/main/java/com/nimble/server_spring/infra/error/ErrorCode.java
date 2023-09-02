@@ -28,7 +28,6 @@ public enum ErrorCode {
   NOT_SHA256_ENCRYPTED(AUTH, BAD_REQUEST, "sha256으로 인코딩된 문자열이 아닙니다."),
 
   // 401 UNAUTHORIZED
-  UNAUTHENTICATED_REQUEST(AUTH, UNAUTHORIZED, "인증되지 않은 요청입니다."),
   INVALID_REFRESH_TOKEN(AUTH, UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
   INCONSISTENT_ACCESS_TOKEN(AUTH, UNAUTHORIZED, "이전에 발급한 엑세스 토큰이 아닙니다."),
   EXPIRED_REFRESH_TOKEN(AUTH, UNAUTHORIZED, "리프레시 토큰이 만료되었습니다."),
@@ -65,6 +64,10 @@ public enum ErrorCode {
   // ==============================================================
   // GLOBAL
   // ==============================================================
+
+  // 401 UNAUTHORIZED
+  UNAUTHENTICATED_REQUEST(AUTH, UNAUTHORIZED, "인증되지 않은 요청입니다."),
+
   // 500 INTERNAL_SERVER_ERROR
   INTERNAL_SERVER_ERROR(GLOBAL, HttpStatus.INTERNAL_SERVER_ERROR, "예상치 못한 에러가 발생했습니다.");
 
