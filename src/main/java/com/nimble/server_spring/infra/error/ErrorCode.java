@@ -1,6 +1,7 @@
 package com.nimble.server_spring.infra.error;
 
 import static com.nimble.server_spring.infra.error.DomainType.AUTH;
+import static com.nimble.server_spring.infra.error.DomainType.GLOBAL;
 import static com.nimble.server_spring.infra.error.DomainType.MEET;
 import static com.nimble.server_spring.infra.error.DomainType.USER;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -59,7 +60,13 @@ public enum ErrorCode {
   NOT_BCRYPT_ENCRYPTED(USER, BAD_REQUEST, "Bcrypt로 인코딩된 문자열이 아닙니다."),
 
   // 404 NOT_FOUND
-  USER_NOT_FOUND_BY_EMAIL(USER, NOT_FOUND, "이메일에 해당하는 사용자가 존재하지 않습니다.");
+  USER_NOT_FOUND_BY_EMAIL(USER, NOT_FOUND, "이메일에 해당하는 사용자가 존재하지 않습니다."),
+
+  // ==============================================================
+  // GLOBAL
+  // ==============================================================
+  // 500 INTERNAL_SERVER_ERROR
+  INTERNAL_SERVER_ERROR(GLOBAL, HttpStatus.INTERNAL_SERVER_ERROR, "예상치 못한 에러가 발생했습니다.");
 
   private final DomainType domainType;
   private final HttpStatus httpStatus;

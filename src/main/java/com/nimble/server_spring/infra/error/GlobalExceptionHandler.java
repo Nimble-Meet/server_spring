@@ -24,12 +24,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         .body(ErrorResponse.fromErrorCode(errorCode));
   }
 
-
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
       HttpHeaders headers, HttpStatusCode status, WebRequest request) {
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST)
         .body(ValidationExceptionWrapper.from(ex).toErrorResponse());
+  }
+
+  @ExceptionHandler(Exception.class)
+  protected ResponseEntity<ErrorResponse> handleException(Exception e) {
+    log.info("Internal Server Error : {}", e.getMessage(), e);
+    return ResponseEntity
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR));
   }
 }
