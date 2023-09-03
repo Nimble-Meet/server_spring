@@ -17,19 +17,20 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final AuthTokenProvider authTokenProvider;
+  private final AuthTokenProvider authTokenProvider;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        String tokenValue = HeaderUtils.resolveBearerTokenFrom(request);
-        AuthToken authToken = authTokenProvider.createAccessTokenOf(tokenValue);
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+      FilterChain filterChain)
+      throws ServletException, IOException {
+    String tokenValue = HeaderUtils.resolveBearerTokenFrom(request);
+    AuthToken authToken = authTokenProvider.createAccessTokenOf(tokenValue);
 
-        if (authToken.validate()) {
-            Authentication authentication = authTokenProvider.getAuthentication(authToken);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-
-        filterChain.doFilter(request, response);
+    if (authToken.validate()) {
+      Authentication authentication = authTokenProvider.getAuthentication(authToken);
+      SecurityContextHolder.getContext().setAuthentication(authentication);
     }
+
+    filterChain.doFilter(request, response);
+  }
 }

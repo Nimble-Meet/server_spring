@@ -1,9 +1,9 @@
 package com.nimble.server_spring.modules.user;
 
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
-import com.nimble.server_spring.modules.auth.validator.BcryptEncrypted;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -37,7 +37,7 @@ public class User {
   @Email
   private String email;
 
-  @BcryptEncrypted
+  @Pattern(regexp = "^\\$2[ayb]\\$.{56}$", message = "비밀번호는 BCrpyt로 암호화된 문자열이어야 합니다.")
   private String password;
 
   @Column()
