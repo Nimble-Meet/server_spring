@@ -1,13 +1,16 @@
 package com.nimble.server_spring.modules.meet;
 
+import com.nimble.server_spring.infra.jpa.BooleanToYNConverter;
 import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -19,36 +22,41 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class MeetMember {
 
-  @Id
-  @GeneratedValue
-  private Long id;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-  @Column
-  @NotNull
-  @CreatedDate
-  private LocalDateTime createdAt;
+    @NotNull
+    @CreatedDate
+    private LocalDateTime createdAt;
 
-  @Column
-  @NotNull
-  @LastModifiedDate
-  private LocalDateTime updatedAt;
+    @NotNull
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @NotNull
-  @JoinColumn(name = "meet_id")
-  private Meet meet;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    @JoinColumn(name = "meet_id")
+    private Meet meet;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @NotNull
-  @JoinColumn(name = "user_id")
-  private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    @JoinColumn(name = "user_id")
+    private User user;
 
-  @Override
-  public String toString() {
-    return "MeetMember{" +
-        "id=" + id +
-        ", createdAt=" + createdAt +
-        ", updatedAt=" + updatedAt +
-        '}';
-  }
+    @Enumerated(EnumType.STRING)
+    private MemberRole memberRole;
+
+    @Convert(converter = BooleanToYNConverter.class)
+    @ColumnDefault("N")
+    private boolean isEntered;
+
+    @Override
+    public String toString() {
+        return "MeetMember{" +
+                "id=" + id +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }
