@@ -24,47 +24,51 @@ import org.springframework.web.filter.CorsFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final CorsFilter corsFilter;
-  private final JwtAuthEntryPoint jwtAuthEntryPoint;
+    private final CorsFilter corsFilter;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
-  @Bean
-  AuthenticationManager authenticationManager(
-      AuthenticationConfiguration authenticationConfiguration) throws Exception {
-    return authenticationConfiguration.getAuthenticationManager();
-  }
+    @Bean
+    AuthenticationManager authenticationManager(
+        AuthenticationConfiguration authenticationConfiguration
+    ) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-  @Bean
-  public SecurityFilterChain filterChain(HttpSecurity httpSecurity,
-      JwtAuthenticationFilter customJwtFilter) throws Exception {
-    httpSecurity
-        .csrf(AbstractHttpConfigurer::disable)
-        .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(configurer -> configurer
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
+    @Bean
+    public SecurityFilterChain filterChain(
+        HttpSecurity httpSecurity,
+        JwtAuthenticationFilter customJwtFilter
+    ) throws Exception {
+        httpSecurity
+            .csrf(AbstractHttpConfigurer::disable)
+            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(configurer -> configurer
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
 
-        .exceptionHandling(configurer -> configurer
-            .authenticationEntryPoint(jwtAuthEntryPoint)
-        )
+            .exceptionHandling(configurer -> configurer
+                .authenticationEntryPoint(jwtAuthEntryPoint)
+            )
 
-        .authorizeHttpRequests(configurer -> configurer
-            .requestMatchers("/api/auth/signup").permitAll()
-            .requestMatchers("/api/auth/login/**").permitAll()
-            .requestMatchers("/api/auth/refresh").permitAll()
-            .requestMatchers("/error").permitAll()
-            .requestMatchers("/swagger-ui/**").permitAll()
-            .requestMatchers("/api-docs/**").permitAll()
-            .anyRequest().authenticated()
-        )
+            .authorizeHttpRequests(configurer -> configurer
+                .requestMatchers("/api/auth/signup").permitAll()
+                .requestMatchers("/api/auth/login/**").permitAll()
+                .requestMatchers("/api/auth/refresh").permitAll()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/api-docs/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
+                .anyRequest().authenticated()
+            )
 
-        .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return httpSecurity.build();
-  }
+        return httpSecurity.build();
+    }
 }
