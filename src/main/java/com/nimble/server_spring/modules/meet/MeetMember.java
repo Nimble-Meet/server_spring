@@ -48,15 +48,22 @@ public class MeetMember {
     private MemberRole memberRole;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @ColumnDefault("N")
     private boolean isEntered;
 
     @Override
     public String toString() {
         return "MeetMember{" +
-                "id=" + id +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                '}';
+               "id=" + id +
+               ", createdAt=" + createdAt +
+               ", updatedAt=" + updatedAt +
+               '}';
+    }
+
+    public void enterMeet() {
+        this.isEntered = true;
+    }
+
+    public void leaveMeet() {
+        this.isEntered = false;
     }
 }
