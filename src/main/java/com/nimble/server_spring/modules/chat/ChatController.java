@@ -66,10 +66,14 @@ public class ChatController {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-        String email = sessionAttributes.get("email").toString();
-        long memberId = Long.parseLong(
-            sessionAttributes.get("memberId").toString()
-        );
+        Object emailAttribute = sessionAttributes.get("email");
+        Object memberIdAttribute = sessionAttributes.get("memberId");
+        if (emailAttribute == null || memberIdAttribute == null) {
+            throw new IllegalArgumentException("socket header에 email 또는 memberId 값이 존재하지 않습니다.");
+        }
+
+        String email = emailAttribute.toString();
+        long memberId = Long.parseLong(memberIdAttribute.toString());
 
         MeetMember meetMember = meetMemberRepository
             .findById(memberId)
