@@ -16,36 +16,46 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler(ErrorCodeException.class)
-  protected ResponseEntity<ErrorResponse> handleErrorCodeException(ErrorCodeException e) {
-    ErrorCode errorCode = e.getErrorCode();
-    log.error("throw ErrorCodeException : {}", errorCode);
-    return ResponseEntity
-        .status(errorCode.getHttpStatus())
-        .body(ErrorResponse.fromErrorCode(errorCode));
-  }
+    @ExceptionHandler(ErrorCodeException.class)
+    protected ResponseEntity<ErrorResponse> handleErrorCodeException(ErrorCodeException e) {
+        log.error("ErrorCodeException thrown", e);
 
-  @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-      HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-    return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(ValidationExceptionWrapper.from(ex).toErrorResponse());
-  }
+        ErrorCode errorCode = e.getErrorCode();
+        return ResponseEntity
+            .status(errorCode.getHttpStatus())
+            .body(ErrorResponse.fromErrorCode(errorCode));
+    }
 
-  @ExceptionHandler(BadCredentialsException.class)
-  protected ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e) {
-    ErrorCode errorCode = ErrorCode.UNAUTHENTICATED_REQUEST;
-    return ResponseEntity
-        .status(errorCode.getHttpStatus())
-        .body(ErrorResponse.fromErrorCode(errorCode));
-  }
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+        MethodArgumentNotValidException ex,
+        HttpHeaders headers, HttpStatusCode status, WebRequest request
+    ) {
+        log.error("MethodArgumentNotValidException thrown", ex);
 
-  @ExceptionHandler(Exception.class)
-  protected ResponseEntity<ErrorResponse> handleException(Exception e) {
-    log.info("Internal Server Error : {}", e.getMessage(), e);
-    return ResponseEntity
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR));
-  }
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ValidationExceptionWrapper.from(ex).toErrorResponse());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    protected ResponseEntity<ErrorResponse> handleBadCredentialsException(
+        BadCredentialsException ex
+    ) {
+        log.error("BadCredentialsException thrown", ex);
+
+        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED_REQUEST;
+        return ResponseEntity
+            .status(errorCode.getHttpStatus())
+            .body(ErrorResponse.fromErrorCode(errorCode));
+    }
+
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception ex) {
+        log.error("Unknown Exception thrown", ex);
+
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR));
+    }
 }
