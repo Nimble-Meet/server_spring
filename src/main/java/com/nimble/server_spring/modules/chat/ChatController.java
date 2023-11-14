@@ -1,5 +1,8 @@
 package com.nimble.server_spring.modules.chat;
 
+import com.nimble.server_spring.infra.error.ErrorCode;
+import com.nimble.server_spring.infra.error.ErrorCodeException;
+import com.nimble.server_spring.infra.error.ErrorResponse;
 import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequestDto;
 import com.nimble.server_spring.modules.chat.dto.request.ChatEnterRequestDto;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
@@ -9,10 +12,12 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -78,7 +83,7 @@ public class ChatController {
         MeetMember meetMember = meetMemberRepository
             .findById(memberId)
             .orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않는 MeetMember 입니다.")
+                () -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND)
             );
         meetMember.leaveMeet();
         meetMemberRepository.save(meetMember);
@@ -94,5 +99,17 @@ public class ChatController {
         ChatResponseDto chatResponseDto = ChatResponseDto.fromChat(chat);
         template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponseDto);
         log.info("유저 퇴장: {}", chatResponseDto);
+    }
+
+    @MessageExceptionHandler
+    @SendToUser(value = "/queue/error", broadcast = false)
+    public ErrorResponse handleException(Throwable exception) {
+        log.error("STOMP Web Socket의 채팅 관련 요청 처리 중 예외가 발생했습니다.", exception);
+        if (exception instanceof ErrorCodeException) {
+            ErrorCode errorCode = ((ErrorCodeException) exception).getErrorCode();
+            return ErrorResponse.fromErrorCode(errorCode);
+        } else {
+            return ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }
