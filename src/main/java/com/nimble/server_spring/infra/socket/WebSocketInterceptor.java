@@ -26,15 +26,22 @@ public class WebSocketInterceptor implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        StompHeaderAccessor headerAccessor = MessageHeaderAccessor.getAccessor(message,
+        StompHeaderAccessor headerAccessor = MessageHeaderAccessor.getAccessor(
+            message,
             StompHeaderAccessor.class
         );
         assert headerAccessor != null;
-
         if (!Objects.equals(headerAccessor.getCommand(), StompCommand.CONNECT)) {
             return message;
         }
 
+        Authentication authentication = authenticate(headerAccessor);
+        headerAccessor.setUser(authentication);
+
+        return message;
+    }
+
+    private Authentication authenticate(StompHeaderAccessor headerAccessor) {
         String authToken = headerAccessor.getFirstNativeHeader(
             HeaderUtils.AUTHORIZATION_HEADER
         );
@@ -43,8 +50,6 @@ public class WebSocketInterceptor implements ChannelInterceptor {
             throw new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST);
         }
 
-        Authentication authentication = authTokenProvider.getAuthentication(accessToken);
-        headerAccessor.setUser(authentication);
-        return message;
+        return authTokenProvider.getAuthentication(accessToken);
     }
 }
