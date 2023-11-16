@@ -1,5 +1,5 @@
 package com.nimble.server_spring.infra.error;
 
 public enum DomainType {
-  AUTH, MEET, USER, GLOBAL
+    AUTH, MEET, USER, CHAT, GLOBAL
 }

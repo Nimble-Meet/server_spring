@@ -35,7 +35,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(ValidationExceptionWrapper.from(ex).toErrorResponse());
+            .body(BindingResultWrapper.of(ex.getBindingResult()).toErrorResponse());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
