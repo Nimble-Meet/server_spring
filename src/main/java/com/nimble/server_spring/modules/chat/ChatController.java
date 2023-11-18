@@ -135,7 +135,7 @@ public class ChatController {
                 invalidFormatException.getValue(),
                 objectMapper
             );
-            return ErrorResponse.createBadRequestResponse(badRequestReason.toJsonString());
+            return badRequestReason.toErrorResponse();
         } else if (exception instanceof MethodArgumentNotValidException) {
             log.info("MethodArgumentNotValidException occurred");
             BindingResult bindingResult = ((MethodArgumentNotValidException) exception).getBindingResult();
