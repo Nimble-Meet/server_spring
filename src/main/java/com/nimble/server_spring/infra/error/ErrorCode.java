@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum ErrorCode implements ErrorResponseSource {
+public enum ErrorCode {
 
     // ==============================================================
     // AUTH ERROR CODE

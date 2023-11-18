@@ -1,6 +1,7 @@
 package com.nimble.server_spring.infra.error;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -42,17 +44,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.error("MethodArgumentTypeMismatchException thrown", ex);
 
-        BadRequestReason badRequestReason = BadRequestReason
+        TypeMismatchReason typeMismatchReason = TypeMismatchReason
             .create(
                 ex.getPropertyName(),
                 ex.getRequiredType(),
-                ex.getValue(),
-                objectMapper
+                ex.getValue()
             );
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(badRequestReason.toErrorResponse());
+            .body(typeMismatchReason.toErrorResponse(objectMapper));
     }
 
     @Override
@@ -64,13 +65,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.error("MethodArgumentNotValidException thrown", ex);
 
-        BindingResultWrapper bindingResultWrapper = BindingResultWrapper.create(
-            ex.getBindingResult(),
-            objectMapper
-        );
+        List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
+
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(bindingResultWrapper.toErrorResponse());
+            .body(NotValidReason.create(fieldErrors).toErrorResponse(objectMapper));
     }
 
     @ExceptionHandler(BadCredentialsException.class)

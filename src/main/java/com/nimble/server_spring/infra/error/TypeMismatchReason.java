@@ -6,22 +6,18 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
 
-public class BadRequestReason implements ErrorResponseSource {
+public class TypeMismatchReason implements ErrorResponseSource {
 
     private final Map<String, BadRequestInfo> fieldMap;
 
-    private final ObjectMapper objectMapper;
-
-    private BadRequestReason(Map<String, BadRequestInfo> fieldMap, ObjectMapper objectMapper) {
+    private TypeMismatchReason(Map<String, BadRequestInfo> fieldMap) {
         this.fieldMap = fieldMap;
-        this.objectMapper = objectMapper;
     }
 
-    public static BadRequestReason create(
+    public static TypeMismatchReason create(
         @Nullable String fieldName,
         @Nullable Class<?> requiredType,
-        @Nullable Object receivedValue,
-        ObjectMapper objectMapper
+        @Nullable Object receivedValue
     ) {
         String fieldNameOrDefault = Optional.ofNullable(fieldName)
             .orElse("unknown");
@@ -36,15 +32,15 @@ public class BadRequestReason implements ErrorResponseSource {
             requiredTypeSimpleName,
             receivedValueString
         );
-        return new BadRequestReason(Map.of(fieldNameOrDefault, badRequestCause), objectMapper);
+        return new TypeMismatchReason(Map.of(fieldNameOrDefault, badRequestCause));
     }
 
     @SneakyThrows
-    public String toJsonString() {
+    public String toJsonString(ObjectMapper objectMapper) {
         return objectMapper.writeValueAsString(fieldMap);
     }
 
-    public ErrorResponse toErrorResponse() {
-        return ErrorResponse.createBadRequestResponse(toJsonString());
+    public ErrorResponse toErrorResponse(ObjectMapper objectMapper) {
+        return ErrorResponse.createBadRequestResponse(toJsonString(objectMapper));
     }
 }

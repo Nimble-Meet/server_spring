@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.error.BadRequestReason;
+import com.nimble.server_spring.infra.error.NotValidReason;
+import com.nimble.server_spring.infra.error.TypeMismatchReason;
 import com.nimble.server_spring.infra.error.ErrorResponse;
-import com.nimble.server_spring.infra.error.BindingResultWrapper;
 import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequestDto;
 import com.nimble.server_spring.modules.chat.dto.request.ChatEnterRequestDto;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
@@ -129,17 +129,25 @@ public class ChatController {
                 .findFirst()
                 .map(Reference::getFieldName)
                 .orElse(null);
-            BadRequestReason badRequestReason = BadRequestReason.create(
+            TypeMismatchReason typeMismatchReason = TypeMismatchReason.create(
                 fieldName,
                 invalidFormatException.getTargetType(),
-                invalidFormatException.getValue(),
-                objectMapper
+                invalidFormatException.getValue()
             );
-            return badRequestReason.toErrorResponse();
+            return typeMismatchReason.toErrorResponse(objectMapper);
         } else if (exception instanceof MethodArgumentNotValidException) {
             log.info("MethodArgumentNotValidException occurred");
-            BindingResult bindingResult = ((MethodArgumentNotValidException) exception).getBindingResult();
-            return BindingResultWrapper.create(bindingResult, objectMapper).toErrorResponse();
+            BindingResult bindingResult = ((MethodArgumentNotValidException) exception)
+                .getBindingResult();
+            return Optional.ofNullable(bindingResult)
+                .map(BindingResult::getFieldErrors)
+                .map(NotValidReason::create)
+                .map(notValidReason -> notValidReason.toErrorResponse(objectMapper))
+                .orElseGet(() -> {
+                    log.error(
+                        "MethodArgumentNotValidException 이 발생했지만, bindingResult 가 null 입니다.");
+                    return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
+                });
         }
         return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
     }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record BadRequestInfo(
     @JsonProperty("errorType") BadRequestType errorType,
-    @JsonProperty("requiredType") String requiredType,
+    @JsonProperty("required") String required,
     @JsonProperty("receivedValue") String receivedValue
 ) {
 
