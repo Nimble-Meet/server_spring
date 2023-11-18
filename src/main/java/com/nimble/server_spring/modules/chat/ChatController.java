@@ -125,14 +125,14 @@ public class ChatController {
         log.error("STOMP Web Socket의 채팅 관련 요청 처리 중 예외가 발생했습니다.", exception);
         if (exception instanceof ErrorCodeException) {
             ErrorCode errorCode = ((ErrorCodeException) exception).getErrorCode();
-            return ErrorResponse.fromErrorCode(errorCode);
+            return errorCode.toErrorResponse();
         } else if (exception instanceof MessageConversionException
                    && exception.getCause() instanceof InvalidFormatException) {
             InvalidFormatException invalidFormatException = (InvalidFormatException) (exception.getCause());
             Optional<Reference> referenceOptional = invalidFormatException.getPath().stream()
                 .findFirst();
             if (referenceOptional.isEmpty()) {
-                return ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR);
+                return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
             }
             Reference reference = referenceOptional.get();
 
@@ -153,6 +153,6 @@ public class ChatController {
             BindingResult bindingResult = ((MethodArgumentNotValidException) exception).getBindingResult();
             return BindingResultWrapper.of(bindingResult).toErrorResponse();
         }
-        return ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR);
+        return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
     }
 }

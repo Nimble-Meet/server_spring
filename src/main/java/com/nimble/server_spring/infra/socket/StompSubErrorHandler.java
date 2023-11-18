@@ -38,7 +38,7 @@ public class StompSubErrorHandler extends StompSubProtocolErrorHandler {
             ErrorCode errorCode = ((ErrorCodeException) ex.getCause()).getErrorCode();
             String receiptId = getReceiptIdFrom(clientMessage);
 
-            ErrorResponse errorResponse = ErrorResponse.fromErrorCode(errorCode);
+            ErrorResponse errorResponse = errorCode.toErrorResponse();
             StompHeaderAccessor errorResponseAccessor = StompHeaderAccessor.create(
                 StompCommand.ERROR
             );

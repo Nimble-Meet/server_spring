@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
@@ -19,23 +20,6 @@ public class ErrorResponse {
     private final String code;
     private final String message;
 
-    public static ErrorResponse fromErrorCode(ErrorCode errorCode) {
-        return ErrorResponse.builder()
-            .status(errorCode.getHttpStatus().value())
-            .error(errorCode.getHttpStatus().name())
-            .code(errorCode.name())
-            .message(errorCode.getMessage())
-            .build();
-    }
-
-    public byte[] toJsonByteArray(ObjectMapper objectMapper) {
-        try {
-            return objectMapper.writeValueAsBytes(this);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static ErrorResponse createBadRequestResponse(String message) {
         return ErrorResponse.builder()
             .status(HttpStatus.BAD_REQUEST.value())
@@ -43,5 +27,15 @@ public class ErrorResponse {
             .code(HttpStatus.BAD_REQUEST.name())
             .message(message)
             .build();
+    }
+
+    @SneakyThrows
+    public byte[] toJsonByteArray(ObjectMapper objectMapper) {
+        return objectMapper.writeValueAsBytes(this);
+    }
+
+    @SneakyThrows
+    public String toJsonString(ObjectMapper objectMapper) {
+        return objectMapper.writeValueAsString(this);
     }
 }

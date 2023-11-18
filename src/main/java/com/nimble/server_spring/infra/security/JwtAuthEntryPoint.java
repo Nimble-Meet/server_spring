@@ -19,19 +19,17 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
 
-  private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-  @Override
-  public void commence(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      AuthenticationException authException
-  ) throws IOException {
-    String errorResponseStr = this.objectMapper.writeValueAsString(
-        ErrorResponse.fromErrorCode(ErrorCode.UNAUTHENTICATED_REQUEST)
-    );
-    response.addHeader("Content-Type", "application/json; charset=UTF-8");
-    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-    response.getWriter().write(errorResponseStr);
-  }
+    @Override
+    public void commence(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        AuthenticationException authException
+    ) throws IOException {
+        ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
+        response.addHeader("Content-Type", "application/json; charset=UTF-8");
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.getWriter().write(errorResponse.toJsonString(objectMapper));
+    }
 }

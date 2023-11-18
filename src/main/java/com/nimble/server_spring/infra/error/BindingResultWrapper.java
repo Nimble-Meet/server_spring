@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
-public class BindingResultWrapper {
+public class BindingResultWrapper implements ErrorResponseSource {
 
     private final BindingResult bindingResult;
 

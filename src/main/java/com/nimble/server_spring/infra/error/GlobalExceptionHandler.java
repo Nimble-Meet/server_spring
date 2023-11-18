@@ -29,7 +29,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorCode errorCode = e.getErrorCode();
         return ResponseEntity
             .status(errorCode.getHttpStatus())
-            .body(ErrorResponse.fromErrorCode(errorCode));
+            .body(errorCode.toErrorResponse());
     }
 
     @Override
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorCode errorCode = ErrorCode.UNAUTHENTICATED_REQUEST;
         return ResponseEntity
             .status(errorCode.getHttpStatus())
-            .body(ErrorResponse.fromErrorCode(errorCode));
+            .body(errorCode.toErrorResponse());
     }
 
     @ExceptionHandler(Exception.class)
@@ -76,6 +76,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR));
+            .body(ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse());
     }
 }

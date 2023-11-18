@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum ErrorCode {
+public enum ErrorCode implements ErrorResponseSource {
 
     // ==============================================================
     // AUTH ERROR CODE
@@ -82,4 +82,13 @@ public enum ErrorCode {
     private final DomainType domainType;
     private final HttpStatus httpStatus;
     private final String message;
+
+    public ErrorResponse toErrorResponse() {
+        return ErrorResponse.builder()
+            .status(httpStatus.value())
+            .error(httpStatus.name())
+            .code(name())
+            .message(message)
+            .build();
+    }
 }

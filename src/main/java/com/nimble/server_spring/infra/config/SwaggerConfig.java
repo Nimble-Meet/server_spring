@@ -28,75 +28,76 @@ import org.springframework.web.method.HandlerMethod;
 @Configuration
 public class SwaggerConfig {
 
-  public static final String JWT_ACCESS_TOKEN = "JwtAccessToken";
+    public static final String JWT_ACCESS_TOKEN = "JwtAccessToken";
 
-  @Bean
-  public GroupedOpenApi publicApi() {
-    SecurityScheme bearerSecurityScheme = new SecurityScheme()
-        .name(JWT_ACCESS_TOKEN)
-        .type(Type.HTTP)
-        .scheme("Bearer");
+    @Bean
+    public GroupedOpenApi publicApi() {
+        SecurityScheme bearerSecurityScheme = new SecurityScheme()
+            .name(JWT_ACCESS_TOKEN)
+            .type(Type.HTTP)
+            .scheme("Bearer");
 
-    return GroupedOpenApi.builder()
-        .group("public")
-        .pathsToMatch("/api/**")
-        .addOpenApiCustomizer(
-            openApi -> openApi.info(new Info().title("Nimble Meet API Docs").version("0.0.1")))
-        // Bearer Auth 설정 버튼 생성
-        .addOpenApiCustomizer(
-            openApi -> openApi.components(openApi.getComponents().addSecuritySchemes(
-                JWT_ACCESS_TOKEN,
-                bearerSecurityScheme
-            )))
-        .addOperationCustomizer(customize())
-        .build();
-  }
+        return GroupedOpenApi.builder()
+            .group("public")
+            .pathsToMatch("/api/**")
+            .addOpenApiCustomizer(
+                openApi -> openApi.info(new Info().title("Nimble Meet API Docs").version("0.0.1")))
+            // Bearer Auth 설정 버튼 생성
+            .addOpenApiCustomizer(
+                openApi -> openApi.components(openApi.getComponents().addSecuritySchemes(
+                    JWT_ACCESS_TOKEN,
+                    bearerSecurityScheme
+                )))
+            .addOperationCustomizer(customize())
+            .build();
+    }
 
-  public OperationCustomizer customize() {
-    return (Operation operation, HandlerMethod handlerMethod) -> {
-      ApiErrorCodes apiErrorCodes = handlerMethod.getMethodAnnotation(
-          ApiErrorCodes.class);
-      if (apiErrorCodes != null) {
-        generateErrorCodeResponses(operation, apiErrorCodes.value());
-      }
-      return operation;
-    };
-  }
+    public OperationCustomizer customize() {
+        return (Operation operation, HandlerMethod handlerMethod) -> {
+            ApiErrorCodes apiErrorCodes = handlerMethod.getMethodAnnotation(
+                ApiErrorCodes.class);
+            if (apiErrorCodes != null) {
+                generateErrorCodeResponses(operation, apiErrorCodes.value());
+            }
+            return operation;
+        };
+    }
 
-  private void generateErrorCodeResponses(Operation operation, ErrorCode[] errorCodes) {
-    ApiResponses responses = operation.getResponses();
+    private void generateErrorCodeResponses(Operation operation, ErrorCode[] errorCodes) {
+        ApiResponses responses = operation.getResponses();
 
-    Map<Integer, List<ApiExampleHolder>> statusWithExampleHolders =
-        Arrays.stream(errorCodes)
-            .map(
-                errorCode -> {
-                  ErrorResponse errorResponse = ErrorResponse.fromErrorCode(errorCode);
-                  Example example = new Example();
-                  example.description(errorResponse.getMessage());
-                  example.value(errorResponse);
-                  return ApiExampleHolder.builder()
-                      .holder(example)
-                      .code(errorResponse.getCode())
-                      .statusCode(errorResponse.getStatus())
-                      .build();
-                })
-            .collect(groupingBy(ApiExampleHolder::getStatusCode));
-    addExamplesToResponses(responses, statusWithExampleHolders);
-  }
+        Map<Integer, List<ApiExampleHolder>> statusWithExampleHolders =
+            Arrays.stream(errorCodes)
+                .map(
+                    errorCode -> {
+                        ErrorResponse errorResponse = errorCode.toErrorResponse();
+                        Example example = new Example();
+                        example.description(errorResponse.getMessage());
+                        example.value(errorResponse);
+                        return ApiExampleHolder.builder()
+                            .holder(example)
+                            .code(errorResponse.getCode())
+                            .statusCode(errorResponse.getStatus())
+                            .build();
+                    })
+                .collect(groupingBy(ApiExampleHolder::getStatusCode));
+        addExamplesToResponses(responses, statusWithExampleHolders);
+    }
 
-  private void addExamplesToResponses(
-      ApiResponses responses, Map<Integer, List<ApiExampleHolder>> statusWithExampleHolders) {
-    statusWithExampleHolders.forEach(
-        (status, exampleHolders) -> {
-          Content content = new Content();
-          MediaType mediaType = new MediaType();
-          ApiResponse apiResponse = new ApiResponse();
-          exampleHolders.forEach(
-              exampleHolder -> mediaType.addExamples(
-                  exampleHolder.getCode(), exampleHolder.getHolder()));
-          content.addMediaType("application/json", mediaType);
-          apiResponse.setContent(content);
-          responses.addApiResponse(status.toString(), apiResponse);
-        });
-  }
+    private void addExamplesToResponses(
+        ApiResponses responses, Map<Integer, List<ApiExampleHolder>> statusWithExampleHolders
+    ) {
+        statusWithExampleHolders.forEach(
+            (status, exampleHolders) -> {
+                Content content = new Content();
+                MediaType mediaType = new MediaType();
+                ApiResponse apiResponse = new ApiResponse();
+                exampleHolders.forEach(
+                    exampleHolder -> mediaType.addExamples(
+                        exampleHolder.getCode(), exampleHolder.getHolder()));
+                content.addMediaType("application/json", mediaType);
+                apiResponse.setContent(content);
+                responses.addApiResponse(status.toString(), apiResponse);
+            });
+    }
 }
