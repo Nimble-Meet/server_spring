@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
-import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
@@ -14,12 +13,17 @@ public class BindingResultWrapper implements ErrorResponseSource {
 
     private final BindingResult bindingResult;
 
-    private BindingResultWrapper(BindingResult bindingResult) {
+    private final ObjectMapper objectMapper;
+
+    private BindingResultWrapper(BindingResult bindingResult, ObjectMapper objectMapper) {
         this.bindingResult = bindingResult;
+        this.objectMapper = objectMapper;
     }
 
-    public static BindingResultWrapper of(BindingResult bindingResult) {
-        return new BindingResultWrapper(bindingResult);
+    public static BindingResultWrapper create(
+        BindingResult bindingResult, ObjectMapper objectMapper
+    ) {
+        return new BindingResultWrapper(bindingResult, objectMapper);
     }
 
     @SneakyThrows
@@ -36,7 +40,7 @@ public class BindingResultWrapper implements ErrorResponseSource {
                         )
                     )
                 );
-        String errorsToJsonString = new ObjectMapper().writeValueAsString(fieldAndErrorMessages);
+        String errorsToJsonString = objectMapper.writeValueAsString(fieldAndErrorMessages);
 
         return ErrorResponse.createBadRequestResponse(errorsToJsonString);
     }

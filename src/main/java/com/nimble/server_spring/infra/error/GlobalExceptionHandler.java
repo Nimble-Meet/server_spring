@@ -55,7 +55,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(BindingResultWrapper.of(ex.getBindingResult()).toErrorResponse());
+            .body(
+                BindingResultWrapper.create(ex.getBindingResult(), objectMapper)
+                    .toErrorResponse()
+            );
     }
 
     @ExceptionHandler(BadCredentialsException.class)
