@@ -17,12 +17,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketInterceptor webSocketInterceptor;
-    private final StompSubErrorHandler stompSubErrorHandler;
+    private final WebSocketErrorHandler webSocketErrorHandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("ws").setAllowedOrigins("*");
-        registry.setErrorHandler(stompSubErrorHandler);
+        registry.setErrorHandler(webSocketErrorHandler);
     }
 
     @Override
