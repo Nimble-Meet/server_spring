@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @Builder
@@ -33,5 +34,14 @@ public class ErrorResponse {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static ErrorResponse createBadRequestResponse(String message) {
+        return ErrorResponse.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error(HttpStatus.BAD_REQUEST.name())
+            .code(HttpStatus.BAD_REQUEST.name())
+            .message(message)
+            .build();
     }
 }

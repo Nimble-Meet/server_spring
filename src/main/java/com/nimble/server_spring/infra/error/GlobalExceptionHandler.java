@@ -1,6 +1,9 @@
 package com.nimble.server_spring.infra.error;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -14,7 +17,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private final ObjectMapper objectMapper;
 
     @ExceptionHandler(ErrorCodeException.class)
     protected ResponseEntity<ErrorResponse> handleErrorCodeException(ErrorCodeException e) {
@@ -24,6 +30,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity
             .status(errorCode.getHttpStatus())
             .body(ErrorResponse.fromErrorCode(errorCode));
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+        TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request
+    ) {
+        log.error("MethodArgumentTypeMismatchException thrown", ex);
+
+        ErrorFieldMap errorFieldMap = ErrorFieldMap
+            .create(ex.getPropertyName(), ex.getMessage(), objectMapper);
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(errorFieldMap.toErrorResponse());
     }
 
     @Override
