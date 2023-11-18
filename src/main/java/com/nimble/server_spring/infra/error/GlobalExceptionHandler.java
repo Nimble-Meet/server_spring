@@ -1,6 +1,7 @@
 package com.nimble.server_spring.infra.error;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
@@ -34,31 +35,42 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleTypeMismatch(
-        TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request
+        @NonNull TypeMismatchException ex,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
     ) {
         log.error("MethodArgumentTypeMismatchException thrown", ex);
 
-        ErrorFieldMap errorFieldMap = ErrorFieldMap
-            .create(ex.getPropertyName(), ex.getMessage(), objectMapper);
+        BadRequestReason badRequestReason = BadRequestReason
+            .create(
+                ex.getPropertyName(),
+                ex.getRequiredType(),
+                ex.getValue(),
+                objectMapper
+            );
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(errorFieldMap.toErrorResponse());
+            .body(badRequestReason.toErrorResponse());
     }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-        MethodArgumentNotValidException ex,
-        HttpHeaders headers, HttpStatusCode status, WebRequest request
+        @NonNull MethodArgumentNotValidException ex,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
     ) {
         log.error("MethodArgumentNotValidException thrown", ex);
 
+        BindingResultWrapper bindingResultWrapper = BindingResultWrapper.create(
+            ex.getBindingResult(),
+            objectMapper
+        );
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(
-                BindingResultWrapper.create(ex.getBindingResult(), objectMapper)
-                    .toErrorResponse()
-            );
+            .body(bindingResultWrapper.toErrorResponse());
     }
 
     @ExceptionHandler(BadCredentialsException.class)

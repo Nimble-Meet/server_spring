@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.error.ErrorFieldMap;
+import com.nimble.server_spring.infra.error.BadRequestReason;
 import com.nimble.server_spring.infra.error.ErrorResponse;
 import com.nimble.server_spring.infra.error.BindingResultWrapper;
 import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequestDto;
@@ -132,18 +132,13 @@ public class ChatController {
             }
             Reference reference = referenceOptional.get();
 
-            Class<?> targetType = invalidFormatException.getTargetType();
-            boolean isNumberFormatViolation = Number.class.isAssignableFrom(targetType);
-            String message = "적절한 형식이 아닙니다.";
-            if (isNumberFormatViolation) {
-                message = "숫자 형식이 아닙니다.";
-            }
-            ErrorFieldMap errorFieldMap = ErrorFieldMap.create(
+            BadRequestReason badRequestReason = BadRequestReason.create(
                 reference.getFieldName(),
-                message,
+                invalidFormatException.getTargetType(),
+                invalidFormatException.getValue(),
                 objectMapper
             );
-            return ErrorResponse.createBadRequestResponse(errorFieldMap.toJsonString());
+            return ErrorResponse.createBadRequestResponse(badRequestReason.toJsonString());
         } else if (exception instanceof MethodArgumentNotValidException) {
             log.info("MethodArgumentNotValidException occurred");
             BindingResult bindingResult = ((MethodArgumentNotValidException) exception).getBindingResult();
