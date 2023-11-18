@@ -125,15 +125,12 @@ public class ChatController {
         } else if (exception instanceof MessageConversionException
                    && exception.getCause() instanceof InvalidFormatException) {
             InvalidFormatException invalidFormatException = (InvalidFormatException) (exception.getCause());
-            Optional<Reference> referenceOptional = invalidFormatException.getPath().stream()
-                .findFirst();
-            if (referenceOptional.isEmpty()) {
-                return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
-            }
-            Reference reference = referenceOptional.get();
-
+            String fieldName = invalidFormatException.getPath().stream()
+                .findFirst()
+                .map(Reference::getFieldName)
+                .orElse(null);
             BadRequestReason badRequestReason = BadRequestReason.create(
-                reference.getFieldName(),
+                fieldName,
                 invalidFormatException.getTargetType(),
                 invalidFormatException.getValue(),
                 objectMapper

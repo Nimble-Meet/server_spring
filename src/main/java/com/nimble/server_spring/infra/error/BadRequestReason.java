@@ -18,11 +18,13 @@ public class BadRequestReason implements ErrorResponseSource {
     }
 
     public static BadRequestReason create(
-        String fieldName,
+        @Nullable String fieldName,
         @Nullable Class<?> requiredType,
         @Nullable Object receivedValue,
         ObjectMapper objectMapper
     ) {
+        String fieldNameOrDefault = Optional.ofNullable(fieldName)
+            .orElse("unknown");
         String requiredTypeSimpleName = Optional.ofNullable(requiredType)
             .map(Class::getSimpleName)
             .orElse(null);
@@ -34,7 +36,7 @@ public class BadRequestReason implements ErrorResponseSource {
             requiredTypeSimpleName,
             receivedValueString
         );
-        return new BadRequestReason(Map.of(fieldName, badRequestCause), objectMapper);
+        return new BadRequestReason(Map.of(fieldNameOrDefault, badRequestCause), objectMapper);
     }
 
     @SneakyThrows
