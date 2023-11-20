@@ -9,17 +9,21 @@ import com.nimble.server_spring.infra.error.NotValidReason;
 import com.nimble.server_spring.infra.error.TypeMismatchReason;
 import com.nimble.server_spring.infra.error.ErrorResponse;
 import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequestDto;
-import com.nimble.server_spring.modules.chat.dto.request.ChatEnterRequestDto;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
 import com.nimble.server_spring.modules.meet.MeetMember;
 import com.nimble.server_spring.modules.meet.MeetMemberRepository;
+import com.nimble.server_spring.modules.user.User;
+import com.nimble.server_spring.modules.user.UserRepository;
+import java.security.Principal;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.converter.MessageConversionException;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -41,77 +45,101 @@ public class ChatController {
     private final SimpMessageSendingOperations template;
     private final ChatRepository chatRepository;
     private final MeetMemberRepository meetMemberRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-    @MessageMapping("/chat/enter")
+    @MessageMapping("/meet/{meetId}/chat/enter")
     public void enterUser(
-        @Payload @Validated ChatEnterRequestDto chatEnterRequestDto,
+        @DestinationVariable Long meetId,
         SimpMessageHeaderAccessor headerAccessor
     ) {
-        log.info("유저 입장: {}", chatEnterRequestDto);
+        User user = Optional.ofNullable(headerAccessor.getUser())
+            .map(Principal::getName)
+            .flatMap(userRepository::findOneByEmail)
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
+
         MeetMember meetMember = meetMemberRepository
-            .findById(chatEnterRequestDto.getMemberId())
-            .orElseThrow(
-                () -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND)
-            );
+            .findByUserIdAndMeetId(user.getId(), meetId)
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND));
+
         meetMember.enterMeet();
         meetMemberRepository.save(meetMember);
 
-        Chat chat = chatEnterRequestDto.toChatEntity();
+        Chat chat = Chat.builder()
+            .chatType(ChatType.ENTER)
+            .email(user.getEmail())
+            .memberId(meetMember.getId())
+            .meetId(meetId)
+            .build();
         chatRepository.save(chat);
 
-        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-        sessionAttributes.put("memberId", chat.getMemberId());
-        sessionAttributes.put("email", chat.getEmail());
-
-        ChatResponseDto chatResponseDto = ChatResponseDto.fromChat(chat);
-        template.convertAndSend("/subscribe/chat/meet/" + chat.getMeetId(), chatResponseDto);
+        headerAccessor.setSessionAttributes(Map.of("memberId", meetMember.getId()));
+        template.convertAndSend(
+            "/subscribe/chat/meet/" + meetId,
+            ChatResponseDto.fromChat(chat)
+        );
     }
 
-    @MessageMapping("/chat/talk")
-    public void sendMessage(@Payload @Validated ChatTalkRequestDto chatTalkRequestDto) {
-        log.info("채팅: {}", chatTalkRequestDto);
-        Chat chat = chatTalkRequestDto.toChatEntity();
+    @MessageMapping("/meet/{meetId}/chat/talk")
+    public void sendMessage(
+        @DestinationVariable Long meetId,
+        @Payload @Validated ChatTalkRequestDto chatTalkRequestDto,
+        SimpMessageHeaderAccessor headerAccessor
+    ) {
+        User user = Optional.ofNullable(headerAccessor.getUser())
+            .map(Principal::getName)
+            .flatMap(userRepository::findOneByEmail)
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
+
+        MeetMember meetMember = meetMemberRepository
+            .findByUserIdAndMeetId(user.getId(), meetId)
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND));
+
+        Chat chat = Chat.builder()
+            .chatType(ChatType.TALK)
+            .email(user.getEmail())
+            .memberId(meetMember.getId())
+            .meetId(meetId)
+            .message(chatTalkRequestDto.getMessage())
+            .build();
         chatRepository.save(chat);
 
-        Long meetId = chatTalkRequestDto.getMeetId();
-        ChatResponseDto chatResponseDto = ChatResponseDto.fromChat(chat);
-        template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponseDto);
+        template.convertAndSend(
+            "/subscribe/chat/meet/" + meetId,
+            ChatResponseDto.fromChat(chat)
+        );
     }
 
     @EventListener
     public void webSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-
-        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-        Object emailAttribute = sessionAttributes.get("email");
-        Object memberIdAttribute = sessionAttributes.get("memberId");
-        if (emailAttribute == null || memberIdAttribute == null) {
+        String email = Optional.ofNullable(headerAccessor.getUser())
+            .map(Principal::getName)
+            .orElse(null);
+        MeetMember meetMember = Optional.ofNullable(headerAccessor.getSessionAttributes())
+            .map(attributes -> attributes.get("memberId"))
+            .map(Object::toString)
+            .map(Long::parseLong)
+            .flatMap(meetMemberRepository::findById)
+            .orElse(null);
+        if (Objects.isNull(email) || Objects.isNull(meetMember)) {
             return;
         }
 
-        String email = emailAttribute.toString();
-        long memberId = Long.parseLong(memberIdAttribute.toString());
-
-        MeetMember meetMember = meetMemberRepository
-            .findById(memberId)
-            .orElseThrow(
-                () -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND)
-            );
         meetMember.leaveMeet();
         meetMemberRepository.save(meetMember);
 
         Chat chat = Chat.builder()
             .chatType(ChatType.LEAVE)
             .email(email)
-            .memberId(memberId)
+            .memberId(meetMember.getId())
             .build();
         chatRepository.save(chat);
 
-        Long meetId = meetMember.getMeet().getId();
-        ChatResponseDto chatResponseDto = ChatResponseDto.fromChat(chat);
-        template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponseDto);
-        log.info("유저 퇴장: {}", chatResponseDto);
+        template.convertAndSend(
+            "/subscribe/chat/meet/" + meetMember.getMeet().getId(),
+            ChatResponseDto.fromChat(chat)
+        );
     }
 
     @MessageExceptionHandler
@@ -139,15 +167,22 @@ public class ChatController {
             log.info("MethodArgumentNotValidException occurred");
             BindingResult bindingResult = ((MethodArgumentNotValidException) exception)
                 .getBindingResult();
-            return Optional.ofNullable(bindingResult)
-                .map(BindingResult::getFieldErrors)
-                .map(NotValidReason::create)
-                .map(notValidReason -> notValidReason.toErrorResponse(objectMapper))
-                .orElseGet(() -> {
-                    log.error(
-                        "MethodArgumentNotValidException 이 발생했지만, bindingResult 가 null 입니다.");
-                    return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
-                });
+            if (Objects.isNull(bindingResult)) {
+                log.error(
+                    "MethodArgumentNotValidException 이 발생했지만, bindingResult 가 null 입니다.");
+                return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
+            }
+
+            if (!Objects.isNull(bindingResult.getGlobalError())) {
+                log.info(
+                    "Chat 메시징 처리 과정에서 GlobalError가 발생했습니다. - {}",
+                    bindingResult.getGlobalError()
+                );
+                return ErrorResponse.createBadRequestResponse("payload가 null이거나 적절한 형식이 아닙니다.");
+            }
+
+            return NotValidReason.create(bindingResult.getFieldErrors())
+                .toErrorResponse(objectMapper);
         }
         return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
     }

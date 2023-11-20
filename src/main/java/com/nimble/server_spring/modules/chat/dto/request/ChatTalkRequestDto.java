@@ -3,6 +3,7 @@ package com.nimble.server_spring.modules.chat.dto.request;
 import com.nimble.server_spring.modules.chat.Chat;
 import com.nimble.server_spring.modules.chat.ChatType;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,24 +19,7 @@ import lombok.Setter;
 public class ChatTalkRequestDto {
 
     @NotNull
-    private Long meetId;
-
-    @Email
-    private String email;
-
-    @NotNull
-    private Long memberId;
-
-    @NotNull
+    @NotBlank
     private String message;
 
-    public Chat toChatEntity() {
-        return Chat.builder()
-            .chatType(ChatType.CHAT)
-            .meetId(meetId)
-            .email(email)
-            .memberId(memberId)
-            .message(message)
-            .build();
-    }
 }
