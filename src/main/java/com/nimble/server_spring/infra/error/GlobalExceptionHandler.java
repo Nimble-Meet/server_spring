@@ -1,11 +1,17 @@
 package com.nimble.server_spring.infra.error;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,38 +20,76 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler(ErrorCodeException.class)
-  protected ResponseEntity<ErrorResponse> handleErrorCodeException(ErrorCodeException e) {
-    ErrorCode errorCode = e.getErrorCode();
-    log.error("throw ErrorCodeException : {}", errorCode);
-    return ResponseEntity
-        .status(errorCode.getHttpStatus())
-        .body(ErrorResponse.fromErrorCode(errorCode));
-  }
+    private final ObjectMapper objectMapper;
 
-  @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-      HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-    return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(ValidationExceptionWrapper.from(ex).toErrorResponse());
-  }
+    @ExceptionHandler(ErrorCodeException.class)
+    protected ResponseEntity<ErrorResponse> handleErrorCodeException(ErrorCodeException e) {
+        log.error("ErrorCodeException thrown", e);
 
-  @ExceptionHandler(BadCredentialsException.class)
-  protected ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e) {
-    ErrorCode errorCode = ErrorCode.UNAUTHENTICATED_REQUEST;
-    return ResponseEntity
-        .status(errorCode.getHttpStatus())
-        .body(ErrorResponse.fromErrorCode(errorCode));
-  }
+        ErrorCode errorCode = e.getErrorCode();
+        return ResponseEntity
+            .status(errorCode.getHttpStatus())
+            .body(errorCode.toErrorResponse());
+    }
 
-  @ExceptionHandler(Exception.class)
-  protected ResponseEntity<ErrorResponse> handleException(Exception e) {
-    log.info("Internal Server Error : {}", e.getMessage(), e);
-    return ResponseEntity
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(ErrorResponse.fromErrorCode(ErrorCode.INTERNAL_SERVER_ERROR));
-  }
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+        @NonNull TypeMismatchException ex,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
+    ) {
+        log.error("MethodArgumentTypeMismatchException thrown", ex);
+
+        TypeMismatchReason typeMismatchReason = TypeMismatchReason
+            .create(
+                ex.getPropertyName(),
+                ex.getRequiredType(),
+                ex.getValue()
+            );
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(typeMismatchReason.toErrorResponse(objectMapper));
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+        @NonNull MethodArgumentNotValidException ex,
+        @NonNull HttpHeaders headers,
+        @NonNull HttpStatusCode status,
+        @NonNull WebRequest request
+    ) {
+        log.error("MethodArgumentNotValidException thrown", ex);
+
+        List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(NotValidReason.create(fieldErrors).toErrorResponse(objectMapper));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    protected ResponseEntity<ErrorResponse> handleBadCredentialsException(
+        BadCredentialsException ex
+    ) {
+        log.error("BadCredentialsException thrown", ex);
+
+        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED_REQUEST;
+        return ResponseEntity
+            .status(errorCode.getHttpStatus())
+            .body(errorCode.toErrorResponse());
+    }
+
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception ex) {
+        log.error("Unknown Exception thrown", ex);
+
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse());
+    }
 }

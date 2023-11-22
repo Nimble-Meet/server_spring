@@ -51,7 +51,7 @@ public class Meet {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
-    @JoinColumn(name = "hostId")
+    @JoinColumn(name = "host_id")
     private User host;
 
     @OneToMany(mappedBy = "meet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -63,9 +63,12 @@ public class Meet {
     }
 
     public Optional<MeetMember> findMember(Long memberId) {
-        System.out.println("findMember");
         return this.meetMembers.stream()
                 .filter(meetMember -> meetMember.getId().equals(memberId))
                 .findFirst();
+    }
+
+    public void addMeetMember(MeetMember meetMember) {
+        this.meetMembers.add(meetMember);
     }
 }

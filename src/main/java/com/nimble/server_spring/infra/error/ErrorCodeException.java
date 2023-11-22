@@ -4,8 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class ErrorCodeException extends RuntimeException {
 
-  private final ErrorCode errorCode;
+    private final ErrorCode errorCode;
+    private final Throwable cause = null;
+
+    public ErrorCodeException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
+    public ErrorCodeException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+    }
 }
