@@ -1,13 +1,14 @@
 package com.nimble.server_spring.modules.auth;
 
 import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
+import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_KEY;
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.properties.JwtProperties;
-import com.nimble.server_spring.infra.utils.CookieUtils;
-import com.nimble.server_spring.infra.utils.HeaderUtils;
+import com.nimble.server_spring.infra.http.CookieParser;
+import com.nimble.server_spring.infra.http.HeaderUtils;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
@@ -38,11 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth", description = "인증 관련 API")
 public class AuthController {
 
-    public static final String ACCESS_TOKEN_KEY = "access_token";
-    public static final String REFRESH_TOKEN_KEY = "refresh_token";
-
     private final AuthService authService;
-    private final JwtProperties jwtProperties;
+    private final TokenCookieFactory tokenCookieFactory;
 
     @PostMapping("/signup")
     @Operation(summary = "이메일 + 비밀 번호 회원 가입", description = "이메일 + 비밀번호로 회원 가입을 합니다.")
@@ -75,7 +73,12 @@ public class AuthController {
     ) {
         JwtToken jwtToken = authService.jwtSign(localLoginDto);
 
-        setJwtTokenCookie(response, jwtToken);
+        response.addCookie(
+            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
+        );
+        response.addCookie(
+            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
+        );
         return new ResponseEntity<>(
             LoginResponseDto.fromJwtToken(jwtToken),
             HttpStatus.OK
@@ -96,7 +99,7 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
-        Cookie refreshTokenCookie = CookieUtils.getCookie(request, REFRESH_TOKEN_KEY)
+        Cookie refreshTokenCookie = CookieParser.from(request).getCookie(REFRESH_TOKEN_KEY)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
         String refreshToken = refreshTokenCookie.getValue();
 
@@ -107,20 +110,15 @@ public class AuthController {
 
         JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);
 
-        setJwtTokenCookie(response, jwtToken);
+        response.addCookie(
+            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
+        );
+        response.addCookie(
+            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
+        );
         return new ResponseEntity<>(
             LoginResponseDto.fromJwtToken(jwtToken),
             HttpStatus.OK
-        );
-    }
-
-    private void setJwtTokenCookie(HttpServletResponse response, JwtToken jwtToken) {
-        // access token의 경우 프론트엔드 단에서 읽을 수 있게 하기 위해 http only를 false로 설정
-        CookieUtils.addCookie(response, ACCESS_TOKEN_KEY, jwtToken.getAccessToken(),
-            jwtProperties.getAccessTokenExpiry(), false
-        );
-        CookieUtils.addCookie(response, REFRESH_TOKEN_KEY, jwtToken.getRefreshToken(),
-            jwtProperties.getRefreshTokenExpiry(), true
         );
     }
 
@@ -139,13 +137,12 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "쿠키의 access token과 refresh token을 삭제 하여 로그아웃 합니다.")
     public ResponseEntity<UserResponseDto> logout(
-        HttpServletRequest request,
         HttpServletResponse response
     ) {
         User currentUser = authService.getCurrentUser();
 
-        CookieUtils.deleteCookie(request, response, ACCESS_TOKEN_KEY);
-        CookieUtils.deleteCookie(request, response, REFRESH_TOKEN_KEY);
+        response.addCookie(tokenCookieFactory.createExpiredAccessTokenCookie());
+        response.addCookie(tokenCookieFactory.createExpiredRefreshTokenCookie());
         return new ResponseEntity<>(
             UserResponseDto.fromUser(currentUser),
             HttpStatus.OK
