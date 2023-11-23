@@ -3,6 +3,7 @@ package com.nimble.server_spring.modules.meet;
 import com.nimble.server_spring.modules.user.QUser;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
+
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -21,41 +23,41 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
         QUser member = new QUser("member");
 
         List<Meet> meetList = jpaQueryFactory.selectFrom(meet)
-                .leftJoin(meet.host, host)
-                .leftJoin(meet.meetMembers, meetMember)
-                .leftJoin(meetMember.user, member)
+            .leftJoin(meet.host, host)
+            .leftJoin(meet.meetMembers, meetMember)
+            .leftJoin(meetMember.user, member)
 
-                .where(meet.id.in(
-                                JPAExpressions
-                                        .select(meet.id)
-                                        .from(meet)
-                                        .where(
-                                                meet.host.id.eq(userId)
-                                                        .or(member.id.eq(userId))
-                                        )
+            .where(meet.id.in(
+                    JPAExpressions
+                        .select(meet.id)
+                        .from(meet)
+                        .where(
+                            meet.host.id.eq(userId)
+                                .or(member.id.eq(userId))
                         )
                 )
-                .fetch();
+            )
+            .fetch();
         return meetList;
     }
 
     @Override
-    public Meet findMeetByIdIfHostedOrInvited(Long meetId, Long userId) {
+    public Optional<Meet> findMeetByIdIfHostedOrInvited(Long meetId, Long userId) {
         QMeet meet = QMeet.meet;
         QUser host = QUser.user;
         QMeetMember meetMember = QMeetMember.meetMember;
         QUser member = new QUser("member");
 
         Meet fetchedMeet = jpaQueryFactory.selectFrom(meet)
-                .leftJoin(meet.host, host)
-                .leftJoin(meet.meetMembers, meetMember)
-                .leftJoin(meetMember.user, member)
-                .where(meet.id.eq(meetId)
-                        .and(host.id.eq(userId)
-                                .or(member.id.eq(userId))
-                        )
+            .leftJoin(meet.host, host)
+            .leftJoin(meet.meetMembers, meetMember)
+            .leftJoin(meetMember.user, member)
+            .where(meet.id.eq(meetId)
+                .and(host.id.eq(userId)
+                    .or(member.id.eq(userId))
                 )
-                .fetchOne();
-        return fetchedMeet;
+            )
+            .fetchOne();
+        return Optional.ofNullable(fetchedMeet);
     }
 }
