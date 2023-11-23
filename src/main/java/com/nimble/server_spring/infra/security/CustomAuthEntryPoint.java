@@ -17,7 +17,7 @@ import java.io.IOException;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
+public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
 

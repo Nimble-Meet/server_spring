@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.socket;
+package com.nimble.server_spring.infra.messaging;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;

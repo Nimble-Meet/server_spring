@@ -1,6 +1,6 @@
 package com.nimble.server_spring.modules.meet;
 
-import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
+import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOKEN;
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;

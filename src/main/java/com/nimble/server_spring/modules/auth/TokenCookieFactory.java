@@ -1,6 +1,6 @@
 package com.nimble.server_spring.modules.auth;
 
-import com.nimble.server_spring.infra.properties.JwtProperties;
+import com.nimble.server_spring.infra.jwt.JwtProperties;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

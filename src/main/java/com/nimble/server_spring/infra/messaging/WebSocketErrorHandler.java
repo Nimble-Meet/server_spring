@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.socket;
+package com.nimble.server_spring.infra.messaging;
 
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.error.ErrorResponse;

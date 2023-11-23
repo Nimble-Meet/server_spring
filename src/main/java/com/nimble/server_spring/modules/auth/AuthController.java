@@ -1,12 +1,12 @@
 package com.nimble.server_spring.modules.auth;
 
-import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
+import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOKEN;
 import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_KEY;
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.properties.JwtProperties;
+import com.nimble.server_spring.infra.jwt.JwtProperties;
 import com.nimble.server_spring.infra.http.CookieParser;
 import com.nimble.server_spring.infra.http.BearerTokenParser;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;

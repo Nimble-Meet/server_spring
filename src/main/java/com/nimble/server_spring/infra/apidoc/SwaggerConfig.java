@@ -1,11 +1,9 @@
-package com.nimble.server_spring.infra.config;
+package com.nimble.server_spring.infra.apidoc;
 
 import static java.util.stream.Collectors.groupingBy;
 
-import com.nimble.server_spring.infra.apidoc.ApiExampleHolder;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorResponse;
-import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.info.Info;

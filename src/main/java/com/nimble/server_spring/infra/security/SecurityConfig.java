@@ -1,7 +1,6 @@
-package com.nimble.server_spring.infra.config;
+package com.nimble.server_spring.infra.security;
 
-import com.nimble.server_spring.infra.jwt.JwtAuthenticationFilter;
-import com.nimble.server_spring.infra.security.JwtAuthEntryPoint;
+import com.nimble.server_spring.infra.jwt.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +24,7 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig {
 
     private final CorsFilter corsFilter;
-    private final JwtAuthEntryPoint jwtAuthEntryPoint;
+    private final CustomAuthEntryPoint authEntryPoint;
 
     @Bean
     AuthenticationManager authenticationManager(
@@ -42,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(
         HttpSecurity httpSecurity,
-        JwtAuthenticationFilter customJwtFilter
+        JwtAuthFilter customJwtFilter
     ) throws Exception {
         httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
@@ -53,7 +52,7 @@ public class SecurityConfig {
             )
 
             .exceptionHandling(configurer -> configurer
-                .authenticationEntryPoint(jwtAuthEntryPoint)
+                .authenticationEntryPoint(authEntryPoint)
             )
 
             .authorizeHttpRequests(configurer -> configurer
