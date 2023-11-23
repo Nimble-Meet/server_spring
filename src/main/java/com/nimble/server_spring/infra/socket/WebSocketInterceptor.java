@@ -4,7 +4,7 @@ import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
-import com.nimble.server_spring.infra.http.HeaderUtils;
+import com.nimble.server_spring.infra.http.BearerTokenParser;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class WebSocketInterceptor implements ChannelInterceptor {
 
     private Authentication authenticate(StompHeaderAccessor headerAccessor) {
         String authToken = headerAccessor.getFirstNativeHeader(
-            HeaderUtils.AUTHORIZATION_HEADER
+            BearerTokenParser.AUTHORIZATION_HEADER
         );
         AuthToken accessToken = authTokenProvider.createAccessTokenOf(authToken);
         if (!accessToken.validate()) {

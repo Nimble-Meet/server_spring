@@ -8,7 +8,7 @@ import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.properties.JwtProperties;
 import com.nimble.server_spring.infra.http.CookieParser;
-import com.nimble.server_spring.infra.http.HeaderUtils;
+import com.nimble.server_spring.infra.http.BearerTokenParser;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
@@ -103,7 +103,7 @@ public class AuthController {
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
         String refreshToken = refreshTokenCookie.getValue();
 
-        String accessToken = HeaderUtils.resolveBearerTokenFrom(request);
+        String accessToken = BearerTokenParser.from(request).getToken();
         if (accessToken == null) {
             throw new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST);
         }

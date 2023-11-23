@@ -1,6 +1,6 @@
 package com.nimble.server_spring.infra.jwt;
 
-import com.nimble.server_spring.infra.http.HeaderUtils;
+import com.nimble.server_spring.infra.http.BearerTokenParser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         FilterChain filterChain
     )
         throws ServletException, IOException {
-        String tokenValue = HeaderUtils.resolveBearerTokenFrom(request);
+        String tokenValue = BearerTokenParser.from(request).getToken();
         AuthToken authToken = authTokenProvider.createAccessTokenOf(tokenValue);
 
         if (authToken.validate()) {
