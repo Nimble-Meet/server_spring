@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.Optional;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,8 +28,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-        HttpServletRequest request, HttpServletResponse response,
-        FilterChain filterChain
+        @NonNull HttpServletRequest request,
+        @NonNull HttpServletResponse response,
+        @NonNull FilterChain filterChain
     )
         throws ServletException, IOException {
         String tokenValue = BearerTokenParser.from(request).getToken();
@@ -39,8 +41,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         );
         boolean isTokenValid = tokenClaimsOptional.isPresent();
         if (isTokenValid) {
-            Claims tokenClaims = tokenClaimsOptional.get();
-            Authentication authentication = publishAuthentication(tokenClaims);
+            Authentication authentication = publishAuthentication(tokenClaimsOptional.get());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
