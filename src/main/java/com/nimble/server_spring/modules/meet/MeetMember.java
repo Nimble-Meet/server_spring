@@ -1,11 +1,10 @@
 package com.nimble.server_spring.modules.meet;
 
-import com.nimble.server_spring.infra.jpa.BooleanToYNConverter;
+import com.nimble.server_spring.infra.persistence.BooleanToYNConverter;
 import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 

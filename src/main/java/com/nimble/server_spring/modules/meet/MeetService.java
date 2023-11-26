@@ -22,45 +22,34 @@ public class MeetService {
 
     private static final int INVITE_LIMIT_NUMBER = 3;
 
-    public List<Meet> getHostedOrInvitedMeets(User user) {
-        return meetRepository.findHostedOrInvitedMeetsByUserId(user.getId());
-    }
-
     public Meet createMeet(User user, MeetCreateRequestDto meetCreateRequestDto) {
         Meet meet = meetRepository.save(
-                Meet.builder()
-                        .meetName(meetCreateRequestDto.getMeetName())
-                        .description(meetCreateRequestDto.getDescription())
-                        .host(user)
-                        .meetMembers(new ArrayList<>())
-                        .build()
+            Meet.builder()
+                .meetName(meetCreateRequestDto.getMeetName())
+                .description(meetCreateRequestDto.getDescription())
+                .host(user)
+                .meetMembers(new ArrayList<>())
+                .build()
         );
 
         MeetMember meetMember = MeetMember.builder()
-                .meet(meet)
-                .user(user)
-                .memberRole(MemberRole.HOST)
-                .isEntered(false)
-                .build();
+            .meet(meet)
+            .user(user)
+            .memberRole(MemberRole.HOST)
+            .isEntered(false)
+            .build();
         meetMemberRepository.save(meetMember);
 
         meet.addMeetMember(meetMember);
         return meet;
     }
 
-    public Meet getMeet(User user, Long meetId) {
-        Meet findMeet = meetRepository.findMeetByIdIfHostedOrInvited(meetId, user.getId());
-        if (findMeet == null) {
-            throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
-        }
-
-        return findMeet;
-    }
-
-    public MeetMember invite(User currentUser, Long meetId,
-                             MeetInviteRequestDto meetInviteRequestDto) {
+    public MeetMember invite(
+        User currentUser, Long meetId,
+        MeetInviteRequestDto meetInviteRequestDto
+    ) {
         Meet meet = meetRepository.findById(meetId)
-                .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
         if (!meet.isHost(currentUser.getId())) {
             throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
@@ -72,33 +61,33 @@ public class MeetService {
 
         String email = meetInviteRequestDto.getEmail();
         User userToInvite = userRepository.findOneByEmail(email)
-                .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
 
         boolean isUserInvited = meet.getMeetMembers().stream()
-                .anyMatch(meetToMember -> meetToMember.getUser().getEmail().equals(email));
+            .anyMatch(meetToMember -> meetToMember.getUser().getEmail().equals(email));
         if (isUserInvited) {
             throw new ErrorCodeException(ErrorCode.USER_ALREADY_INVITED);
         }
 
         MeetMember meetMember = MeetMember.builder()
-                .meet(meet)
-                .user(userToInvite)
-                .isEntered(false)
-                .memberRole(MemberRole.MEMBER)
-                .build();
+            .meet(meet)
+            .user(userToInvite)
+            .isEntered(false)
+            .memberRole(MemberRole.MEMBER)
+            .build();
         return meetMemberRepository.save(meetMember);
     }
 
     public MeetMember kickOut(User currentUser, Long meetId, Long memberId) {
         Meet meet = meetRepository.findById(meetId)
-                .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
         if (!meet.isHost(currentUser.getId())) {
             throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
         }
 
         MeetMember meetMember = meet.findMember(memberId)
-                .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEMBER_NOT_FOUND));
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEMBER_NOT_FOUND));
         meet.getMeetMembers().remove(meetMember);
         meetMemberRepository.delete(meetMember);
 

@@ -1,10 +1,12 @@
-package com.nimble.server_spring.infra.socket;
+package com.nimble.server_spring.infra.messaging;
 
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.jwt.AuthToken;
-import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
-import com.nimble.server_spring.infra.utils.HeaderUtils;
+import com.nimble.server_spring.infra.jwt.AuthTokenManager;
+import com.nimble.server_spring.infra.http.BearerTokenParser;
+import com.nimble.server_spring.infra.jwt.JwtTokenType;
+import io.jsonwebtoken.Claims;
+import java.util.Collection;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +16,10 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -22,7 +27,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class WebSocketInterceptor implements ChannelInterceptor {
 
-    private final AuthTokenProvider authTokenProvider;
+    private final AuthTokenManager authTokenManager;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -43,13 +48,14 @@ public class WebSocketInterceptor implements ChannelInterceptor {
 
     private Authentication authenticate(StompHeaderAccessor headerAccessor) {
         String authToken = headerAccessor.getFirstNativeHeader(
-            HeaderUtils.AUTHORIZATION_HEADER
+            BearerTokenParser.AUTHORIZATION_HEADER
         );
-        AuthToken accessToken = authTokenProvider.createAccessTokenOf(authToken);
-        if (!accessToken.validate()) {
-            throw new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST);
-        }
 
-        return authTokenProvider.getAuthentication(accessToken);
+        Claims tokenClaims = authTokenManager.getTokenClaims(authToken, JwtTokenType.ACCESS)
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
+        Collection<? extends SimpleGrantedAuthority> authorities =
+            authTokenManager.getAuthorities(tokenClaims);
+        User principal = new User(tokenClaims.getSubject(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
 }

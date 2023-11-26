@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.socket;
+package com.nimble.server_spring.infra.messaging;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;

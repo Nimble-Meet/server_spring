@@ -1,6 +1,6 @@
 package com.nimble.server_spring.modules.user;
 
-import static com.nimble.server_spring.infra.config.SwaggerConfig.JWT_ACCESS_TOKEN;
+import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOKEN;
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,11 +29,11 @@ public class UserController {
     @GetMapping("/{email}")
     @Operation(summary = "유저 조회", description = "이메일로 유저를 조회합니다.")
     @ApiErrorCodes({
-            ErrorCode.USER_NOT_FOUND_BY_EMAIL
+        ErrorCode.USER_NOT_FOUND_BY_EMAIL
     })
     public ResponseEntity<SimpleUserResponseDto> getUserByEmail(
-            @PathVariable @Parameter(description = "이메일", required = true)
-            String email
+        @PathVariable @Parameter(description = "이메일", required = true)
+        String email
     ) {
         User user = userService.getUserByEmail(email);
         SimpleUserResponseDto simpleUserResponseDto = SimpleUserResponseDto.fromUser(user);

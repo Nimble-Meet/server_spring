@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.config;
+package com.nimble.server_spring.infra.persistence;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

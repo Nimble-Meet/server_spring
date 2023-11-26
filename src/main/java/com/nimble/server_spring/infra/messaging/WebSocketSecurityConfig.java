@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.security;
+package com.nimble.server_spring.infra.messaging;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
