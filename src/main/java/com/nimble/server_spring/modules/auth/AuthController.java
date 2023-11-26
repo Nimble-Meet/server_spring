@@ -136,6 +136,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "쿠키의 access token과 refresh token을 삭제 하여 로그아웃 합니다.")
+    @SecurityRequirement(name = JWT_ACCESS_TOKEN)
     public ResponseEntity<UserResponseDto> logout(
         HttpServletResponse response
     ) {
