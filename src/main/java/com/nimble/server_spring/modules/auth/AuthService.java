@@ -3,7 +3,8 @@ package com.nimble.server_spring.modules.auth;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.jwt.AuthToken;
-import com.nimble.server_spring.infra.jwt.AuthTokenProvider;
+import com.nimble.server_spring.infra.jwt.AuthTokenManager;
+import com.nimble.server_spring.infra.jwt.JwtTokenType;
 import com.nimble.server_spring.infra.security.RoleType;
 import com.nimble.server_spring.infra.security.UserPrincipal;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
@@ -14,7 +15,6 @@ import com.nimble.server_spring.modules.user.UserRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,7 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @Service
@@ -32,7 +31,7 @@ public class AuthService {
     private final JwtTokenRepository jwtTokenRepository;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
-    private final AuthTokenProvider authTokenProvider;
+    private final AuthTokenManager authTokenManager;
 
     @Transactional
     public User signup(LocalSignupRequestDto localSignupDto) {
@@ -67,12 +66,15 @@ public class AuthService {
         );
         String role = ((UserPrincipal) authentication.getPrincipal()).getRoleType().getCode();
 
-        AuthToken accessToken = authTokenProvider.publishAccessToken(
+        AuthToken accessToken = authTokenManager.publishToken(
             localLoginDto.getEmail(),
-            role
+            role,
+            JwtTokenType.ACCESS
         );
-        AuthToken refreshToken = authTokenProvider.publishRefreshToken(
-            localLoginDto.getEmail()
+        AuthToken refreshToken = authTokenManager.publishToken(
+            localLoginDto.getEmail(),
+            null,
+            JwtTokenType.REFRESH
         );
 
         User findUser = userRepository.findOneByEmail(localLoginDto.getEmail())
@@ -89,18 +91,22 @@ public class AuthService {
         if (!jwtToken.equalsAccessToken(prevAccessToken)) {
             throw new ErrorCodeException(ErrorCode.INCONSISTENT_ACCESS_TOKEN);
         }
-
-        AuthToken refreshToken = authTokenProvider.createRefreshTokenOf(prevRefreshToken);
-        if (!refreshToken.validate()) {
+        boolean isRefreshTokenValid = authTokenManager
+            .getTokenClaims(prevRefreshToken, JwtTokenType.REFRESH)
+            .isPresent();
+        if (!isRefreshTokenValid) {
             throw new ErrorCodeException(ErrorCode.EXPIRED_REFRESH_TOKEN);
         }
 
-        AuthToken newAccessToken = authTokenProvider.publishAccessToken(
+        AuthToken newAccessToken = authTokenManager.publishToken(
             jwtToken.getUser().getEmail(),
-            RoleType.USER.getCode()
+            RoleType.USER.getCode(),
+            JwtTokenType.ACCESS
         );
-        AuthToken newRefreshToken = authTokenProvider.publishRefreshToken(
-            jwtToken.getUser().getEmail()
+        AuthToken newRefreshToken = authTokenManager.publishToken(
+            jwtToken.getUser().getEmail(),
+            null,
+            JwtTokenType.REFRESH
         );
 
         JwtToken newJwtToken = jwtToken.reissue(newAccessToken, newRefreshToken);

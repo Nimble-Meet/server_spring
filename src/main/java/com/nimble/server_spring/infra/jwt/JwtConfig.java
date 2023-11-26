@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 public class JwtConfig {
 
     @Bean
-    public AuthTokenProvider tokenProvider(JwtProperties jwtProperties) {
-        return new AuthTokenProvider(
+    public AuthTokenManager tokenProvider(JwtProperties jwtProperties) {
+        return new AuthTokenManager(
             jwtProperties.getAccessTokenSecret(),
             jwtProperties.getRefreshTokenSecret(),
             jwtProperties.getAccessTokenExpiry(),
