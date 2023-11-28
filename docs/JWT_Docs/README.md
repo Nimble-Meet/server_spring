@@ -1,12 +1,12 @@
 # JWT를 이용한 인증 로직
 
-JWT 토큰을 이용한 인증 시스템을 구축하기 위해서 크게 세가지 로직을 구현했습니다.
+JWT 토큰을 이용한 인증 시스템을 구축하기 위해서 크게 세가지 작업을 진행했습니다.
 
-- JWT 토큰 발급 및 검증 로직
-- Spring Security 커스텀 필터 적용 및 예외 처리 로직
-- 각 endpoint에 대한 controller 로직
+- JWT 토큰 발급 및 검증 로직 구현
+- 토큰 기반 검증을 수행하는 Security 커스텀 필터 적용
+- 로그인, 토큰 재발급 로직 구현
 
-## JWT 토큰 발급 및 검증 로직
+## JWT 토큰 발급 및 검증 로직 구현
 
 JWT 토큰 빌드에는 io.jsonwebtoken 라이브러리를 사용했습니다.  
 [AuthTokenManager](https://github.com/Nimble-Meet/server_spring/blob/develop/src/main/java/com/nimble/server_spring/infra/jwt/AuthTokenManager.java)
@@ -53,3 +53,23 @@ access token과 refresh token은 각각 다른 키를 이용해서 빌드했으�
 
 getAuthorities의 경우 claim에서 role을 추출하여 SimpleGrantedAuthority 객체로 변환한 후, List로 감싸서 반환합니다.  
 Filter 계층에서는 해당 반환값을 이용해 Security 인증 처리를 합니다.
+
+## 토큰 기반 검증을 수행하는 Security 커스텀 필터 적용
+
+이제 인증이 필요한 요청이 온 경우 Security 단에서 jwt access token의 유효성을 판단하여 Authentication을 발급하도록 구현해야 합니다.  
+클라이언트에서는 로그인 시 발급받은 access token을 Authorization 헤더에 Bearer Token으로 삽입해서 요청을 보냅니다.  
+[JwtAuthFilter](https://github.com/Nimble-Meet/server_spring/blob/develop/src/main/java/com/nimble/server_spring/infra/jwt/JwtAuthFilter.java)
+는 요청 헤더에 포함된 토큰 값을 추출하고, 주입받은 authTokenManager 객체를 이용해서 해당 토큰의 유효성을 판단합니다.  
+토큰이 유효할 경우에는 UsernamePasswordAuthenticationToken을 발급해서 인증 처리를 하고, 유효하지 않을 경우에는 요청이 거부되도록 합니다.
+
+[SecurityConfig](https://github.com/Nimble-Meet/server_spring/blob/develop/src/main/java/com/nimble/server_spring/infra/security/SecurityConfig.java)
+설정을 통해 JwtAuthFilter가 UsernamePasswordAuthenticationFilter 앞에 적용되어 인증 처리를 담당하게 됩니다.  
+인증에 실패할 경우 접근이 거부되어
+[CustomAuthEntryPoint](https://github.com/Nimble-Meet/server_spring/blob/develop/src/main/java/com/nimble/server_spring/infra/security/CustomAuthEntryPoint.java)
+에 정의한 대로 401 에러 응답이 이루어집니다.
+
+## 로그인, 토큰 재발급 로직 구현
+
+[AuthController](https://github.com/Nimble-Meet/server_spring/blob/develop/src/main/java/com/nimble/server_spring/modules/auth/AuthController.java)
+는 인증과 관련된 요청을 처리하는 controller 객체입니다.  
+로그인(POST /api/auth/login/local), 토큰 재발급(POST /api/auth/refresh) 의 경우 해당 컨트롤러에서 요청을 처리합니다.
