@@ -7,7 +7,7 @@ import lombok.Getter;
 public class ErrorCodeException extends RuntimeException {
 
     private final ErrorCode errorCode;
-    private final Throwable cause = null;
+    private Throwable cause;
 
     public ErrorCodeException(ErrorCode errorCode) {
         super(errorCode.getMessage());
@@ -17,5 +17,6 @@ public class ErrorCodeException extends RuntimeException {
     public ErrorCodeException(ErrorCode errorCode, Throwable cause) {
         super(errorCode.getMessage(), cause);
         this.errorCode = errorCode;
+        this.cause = cause;
     }
 }
