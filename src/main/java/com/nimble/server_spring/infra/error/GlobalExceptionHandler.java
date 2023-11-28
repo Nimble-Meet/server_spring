@@ -72,18 +72,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             .body(NotValidReason.create(fieldErrors).toErrorResponse(objectMapper));
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    protected ResponseEntity<ErrorResponse> handleBadCredentialsException(
-        BadCredentialsException ex
-    ) {
-        log.error("BadCredentialsException thrown", ex);
-
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED_REQUEST;
-        return ResponseEntity
-            .status(errorCode.getHttpStatus())
-            .body(errorCode.toErrorResponse());
-    }
-
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception ex) {
         log.error("Unknown Exception thrown", ex);

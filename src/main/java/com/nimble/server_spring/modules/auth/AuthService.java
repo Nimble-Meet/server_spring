@@ -16,6 +16,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,12 +59,18 @@ public class AuthService {
 
     @Transactional
     public JwtToken jwtSign(LocalLoginRequestDto localLoginDto) {
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                localLoginDto.getEmail(),
-                localLoginDto.getPassword()
-            )
-        );
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    localLoginDto.getEmail(),
+                    localLoginDto.getPassword()
+                )
+            );
+        } catch (BadCredentialsException ex) {
+            throw new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST, ex);
+        }
+
         String role = ((UserPrincipal) authentication.getPrincipal()).getRoleType().getCode();
 
         AuthToken accessToken = authTokenManager.publishToken(
