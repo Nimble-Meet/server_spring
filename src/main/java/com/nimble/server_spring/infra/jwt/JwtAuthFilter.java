@@ -31,8 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         @NonNull HttpServletRequest request,
         @NonNull HttpServletResponse response,
         @NonNull FilterChain filterChain
-    )
-        throws ServletException, IOException {
+    ) throws ServletException, IOException {
         String tokenValue = BearerTokenParser.from(request).getToken();
 
         Optional<Claims> tokenClaimsOptional = authTokenManager.getTokenClaims(
