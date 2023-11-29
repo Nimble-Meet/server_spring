@@ -20,7 +20,9 @@ import java.util.Map;
 @Getter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class UserPrincipal implements OAuth2User, UserDetails, OidcUser {
+public class CustomUserDetails implements OAuth2User, UserDetails, OidcUser {
+
+    private final Long userId;
     private final String email;
     private final String password;
     private final OauthProvider providerType;
@@ -73,20 +75,21 @@ public class UserPrincipal implements OAuth2User, UserDetails, OidcUser {
         return null;
     }
 
-    public static UserPrincipal from(User user) {
-        return new UserPrincipal(
-                user.getEmail(),
-                user.getPassword(),
-                user.getProviderType(),
-                RoleType.USER,
-                Collections.singletonList(new SimpleGrantedAuthority(RoleType.USER.getCode()))
+    public static CustomUserDetails from(User user) {
+        return new CustomUserDetails(
+            user.getId(),
+            user.getEmail(),
+            user.getPassword(),
+            user.getProviderType(),
+            RoleType.USER,
+            Collections.singletonList(new SimpleGrantedAuthority(RoleType.USER.getCode()))
         );
     }
 
-    public static UserPrincipal from(User user, Map<String, Object> attributes) {
-        UserPrincipal userPrincipal = from(user);
-        userPrincipal.attributes = attributes;
+    public static CustomUserDetails from(User user, Map<String, Object> attributes) {
+        CustomUserDetails userDetails = from(user);
+        userDetails.attributes = attributes;
 
-        return userPrincipal;
+        return userDetails;
     }
 }

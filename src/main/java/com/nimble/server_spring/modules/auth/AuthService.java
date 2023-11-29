@@ -6,8 +6,6 @@ import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.jwt.JwtTokenType;
 import com.nimble.server_spring.infra.security.RoleType;
-import com.nimble.server_spring.infra.security.UserPrincipal;
-import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
 import com.nimble.server_spring.modules.user.User;
@@ -15,9 +13,6 @@ import com.nimble.server_spring.modules.user.UserRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,7 +26,6 @@ public class AuthService {
 
     private final JwtTokenRepository jwtTokenRepository;
     private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
     private final AuthTokenManager authTokenManager;
 
     @Transactional
@@ -55,41 +49,6 @@ public class AuthService {
             .build();
 
         return userRepository.save(user);
-    }
-
-    @Transactional
-    public JwtToken jwtSign(LocalLoginRequestDto localLoginDto) {
-        Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    localLoginDto.getEmail(),
-                    localLoginDto.getPassword()
-                )
-            );
-        } catch (BadCredentialsException ex) {
-            throw new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST, ex);
-        }
-
-        String role = ((UserPrincipal) authentication.getPrincipal()).getRoleType().getCode();
-
-        AuthToken accessToken = authTokenManager.publishToken(
-            localLoginDto.getEmail(),
-            role,
-            JwtTokenType.ACCESS
-        );
-        AuthToken refreshToken = authTokenManager.publishToken(
-            localLoginDto.getEmail(),
-            null,
-            JwtTokenType.REFRESH
-        );
-
-        User findUser = userRepository.findOneByEmail(localLoginDto.getEmail())
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND));
-        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(findUser.getId())
-            .map(token -> token.reissue(accessToken, refreshToken))
-            .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, findUser));
-        return jwtTokenRepository.save(jwtToken);
     }
 
     public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {

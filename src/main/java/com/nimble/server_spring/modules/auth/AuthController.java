@@ -60,31 +60,6 @@ public class AuthController {
         );
     }
 
-    @PostMapping("/login/local")
-    @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
-    @ApiErrorCodes({
-        ErrorCode.LOGIN_FAILED,
-        ErrorCode.USER_NOT_FOUND,
-    })
-    public ResponseEntity<LoginResponseDto> login(
-        HttpServletResponse response,
-        @RequestBody @Validated @Parameter(description = "로그인 정보", required = true)
-        LocalLoginRequestDto localLoginDto
-    ) {
-        JwtToken jwtToken = authService.jwtSign(localLoginDto);
-
-        response.addCookie(
-            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
-        );
-        response.addCookie(
-            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
-        );
-        return new ResponseEntity<>(
-            LoginResponseDto.fromJwtToken(jwtToken),
-            HttpStatus.OK
-        );
-    }
-
     @PostMapping("/refresh")
     @Operation(summary = "Access Token 토큰 갱신", description = "refresh token 유효성 검증 후 access token을 갱신합니다.")
     @ApiErrorCodes({
