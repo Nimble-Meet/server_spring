@@ -29,15 +29,27 @@ public class CustomAuthenticationManager implements AuthenticationManager {
             password = (String) authentication.getCredentials();
         } catch (Exception exception) {
             log.error(
-                "타입 변환에 실패했습니다. - email: {}, password: {}",
+                "인증 과정에서 타입 변환에 실패했습니다. - email: {}, password type: {}",
                 authentication.getPrincipal(),
-                authentication.getCredentials(),
+                authentication.getCredentials().getClass(),
                 exception
             );
-            throw new BadCredentialsException("로그인에 실패했습니다.", exception);
+            throw new BadCredentialsException(
+                "인증 과정에서 타입 변환에 실패했습니다. : " + exception.getMessage(),
+                exception
+            );
         }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        UserDetails userDetails;
+        try {
+            userDetails = userDetailsService.loadUserByUsername(email);
+        } catch (AuthenticationException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            log.error("UserDetails 조회에 실패했습니다. - email: {}", email, exception);
+            throw new BadCredentialsException("UserDetails 조회에 실패했습니다.", exception);
+        }
+
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }

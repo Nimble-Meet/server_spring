@@ -25,7 +25,10 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
         HttpServletResponse response,
         AuthenticationException exception
     ) {
-        log.info("Authentication Failed", exception);
+        log.info("Authentication Failed - {}: {}",
+            exception.getClass().getSimpleName(),
+            exception.getMessage()
+        );
         ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
 
         try {
