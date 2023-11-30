@@ -13,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.CorsFilter;
 
 @Configuration
@@ -28,16 +29,17 @@ public class SecurityConfig {
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
     private final ObjectMapper objectMapper;
 
-    public CustomAuthenticationProcessingFilter customAuthenticationProcessingFilter() {
-        CustomAuthenticationProcessingFilter filter = new CustomAuthenticationProcessingFilter(
-            "/api/auth/login/local",
+    @Bean
+    public UsernamePasswordAuthenticationFilter customAuthenticationProcessingFilter() {
+        LocalLoginFilter filter = new LocalLoginFilter(
+            new LocalLoginAuthenticationManager(userDetailsService, new BCryptPasswordEncoder()),
             objectMapper
-        );
-        filter.setAuthenticationManager(
-            new CustomAuthenticationManager(userDetailsService, new BCryptPasswordEncoder())
         );
         filter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
         filter.setAuthenticationFailureHandler(authenticationFailureHandler);
+        filter.setRequiresAuthenticationRequestMatcher(
+            new AntPathRequestMatcher("/api/auth/login/local", "POST")
+        );
         return filter;
     }
 
@@ -69,10 +71,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(customAuthenticationProcessingFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            );
+            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }

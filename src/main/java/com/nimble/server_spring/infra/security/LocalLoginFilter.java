@@ -8,22 +8,23 @@ import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Slf4j
-public class CustomAuthenticationProcessingFilter extends AbstractAuthenticationProcessingFilter {
+public class LocalLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final ObjectMapper objectMapper;
 
-    protected CustomAuthenticationProcessingFilter(
-        String defaultFilterProcessesUrl,
+    protected LocalLoginFilter(
+        AuthenticationManager authenticationManager,
         ObjectMapper objectMapper
     ) {
-        super(defaultFilterProcessesUrl);
+        super(authenticationManager);
         this.objectMapper = objectMapper;
     }
 

@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RequiredArgsConstructor
 @Slf4j
-public class CustomAuthenticationManager implements AuthenticationManager {
+public class LocalLoginAuthenticationManager implements AuthenticationManager {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
