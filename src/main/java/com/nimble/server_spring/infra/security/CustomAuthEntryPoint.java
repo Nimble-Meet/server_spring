@@ -25,6 +25,7 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
         HttpServletResponse response,
         AuthenticationException authException
     ) {
+        log.info("인증에 실패했습니다.", authException);
         ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
 
         try {

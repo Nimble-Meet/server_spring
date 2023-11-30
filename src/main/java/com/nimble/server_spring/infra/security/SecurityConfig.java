@@ -71,7 +71,11 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(
+                new ExceptionHandlerFilter(objectMapper),
+                UsernamePasswordAuthenticationFilter.class
+            );
 
         return httpSecurity.build();
     }

@@ -44,10 +44,11 @@ public class LocalLoginFilter extends UsernamePasswordAuthenticationFilter {
             localLoginRequestDto = RequestBodyParser.from(request)
                 .parseTo(LocalLoginRequestDto.class, objectMapper);
         } catch (Exception exception) {
-            throw new BadCredentialsException(
-                "request body를 파싱하는데 실패했습니다. - " + exception.getMessage(),
-                exception
+            log.info("request body를 파싱하는데 실패했습니다. - {}: {}",
+                exception.getClass().getSimpleName(),
+                exception.getMessage()
             );
+            throw new BadCredentialsException("request body를 파싱하는데 실패했습니다.", exception);
         }
 
         return getAuthenticationManager().authenticate(

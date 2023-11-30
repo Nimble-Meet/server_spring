@@ -6,6 +6,7 @@ import com.nimble.server_spring.infra.error.ErrorResponse;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
@@ -24,22 +25,16 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
         HttpServletRequest request,
         HttpServletResponse response,
         AuthenticationException exception
-    ) {
-        log.info("Authentication Failed - {}: {}",
+    ) throws IOException {
+        log.info("아이디/비밀번호 로그인에 실패했습니다. - {}: {}",
             exception.getClass().getSimpleName(),
             exception.getMessage()
         );
         ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
-
-        try {
-            ServletResponseWrapper.of(response)
-                .sendJsonResponse(
-                    HttpServletResponse.SC_UNAUTHORIZED,
-                    errorResponse.toJsonString(objectMapper)
-                );
-        } catch (Exception e) {
-            log.error("Unknow Exception thrown in onAuthenticationFailure()", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+        ServletResponseWrapper.of(response)
+            .sendJsonResponse(
+                HttpServletResponse.SC_UNAUTHORIZED,
+                errorResponse.toJsonString(objectMapper)
+            );
     }
 }

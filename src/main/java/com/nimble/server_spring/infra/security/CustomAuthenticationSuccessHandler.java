@@ -11,6 +11,7 @@ import com.nimble.server_spring.modules.auth.TokenCookieFactory;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -31,43 +32,38 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     @Override
     public void onAuthenticationSuccess(
         HttpServletRequest request, HttpServletResponse response, Authentication authentication
-    ) {
-        try {
-            String email = (String) authentication.getPrincipal();
-            CustomUserDetails userDetails =
-                (CustomUserDetails) userDetailsService.loadUserByUsername(email);
-            String role = userDetails.getRoleType().getCode();
+    ) throws IOException {
+        String email = (String) authentication.getPrincipal();
+        CustomUserDetails userDetails =
+            (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+        String role = userDetails.getRoleType().getCode();
 
-            AuthToken accessToken = authTokenManager.publishToken(
-                email,
-                role,
-                JwtTokenType.ACCESS
-            );
-            AuthToken refreshToken = authTokenManager.publishToken(
-                email,
-                null,
-                JwtTokenType.REFRESH
-            );
+        AuthToken accessToken = authTokenManager.publishToken(
+            email,
+            role,
+            JwtTokenType.ACCESS
+        );
+        AuthToken refreshToken = authTokenManager.publishToken(
+            email,
+            null,
+            JwtTokenType.REFRESH
+        );
 
-            Long userId = userDetails.getUserId();
-            JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
-                .map(token -> token.reissue(accessToken, refreshToken))
-                .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userId));
+        Long userId = userDetails.getUserId();
+        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
+            .map(token -> token.reissue(accessToken, refreshToken))
+            .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userId));
 
-            response.addCookie(
-                tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
-            );
-            response.addCookie(
-                tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
-            );
+        response.addCookie(
+            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
+        );
+        response.addCookie(
+            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
+        );
 
-            ServletResponseWrapper.of(response).sendJsonResponse(
-                HttpServletResponse.SC_CREATED,
-                LoginResponseDto.fromJwtToken(jwtToken).toJsonString(objectMapper)
-            );
-        } catch (Exception e) {
-            log.error("Unknown Exception thrown in onAuthenticationSuccess()", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+        ServletResponseWrapper.of(response).sendJsonResponse(
+            HttpServletResponse.SC_CREATED,
+            LoginResponseDto.fromJwtToken(jwtToken).toJsonString(objectMapper)
+        );
     }
 }
