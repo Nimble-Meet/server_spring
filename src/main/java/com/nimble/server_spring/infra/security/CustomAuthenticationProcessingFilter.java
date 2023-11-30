@@ -1,5 +1,7 @@
 package com.nimble.server_spring.infra.security;
 
+import static org.springframework.http.HttpMethod.POST;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.http.RequestBodyParser;
 import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
@@ -30,6 +32,12 @@ public class CustomAuthenticationProcessingFilter extends AbstractAuthentication
         HttpServletRequest request,
         HttpServletResponse response
     ) throws AuthenticationException {
+        if (!POST.name().equalsIgnoreCase(request.getMethod())) {
+            throw new BadCredentialsException(
+                "허용되지 않은 http 메서드입니다. - " + request.getMethod()
+            );
+        }
+
         LocalLoginRequestDto localLoginRequestDto;
         try {
             localLoginRequestDto = RequestBodyParser.from(request)
