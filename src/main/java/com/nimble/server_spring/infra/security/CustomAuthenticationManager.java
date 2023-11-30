@@ -22,8 +22,20 @@ public class CustomAuthenticationManager implements AuthenticationManager {
     public Authentication authenticate(
         Authentication authentication
     ) throws AuthenticationException {
-        String email = (String) authentication.getPrincipal();
-        String password = (String) authentication.getCredentials();
+        String email;
+        String password;
+        try {
+            email = (String) authentication.getPrincipal();
+            password = (String) authentication.getCredentials();
+        } catch (Exception exception) {
+            log.error(
+                "타입 변환에 실패했습니다. - email: {}, password: {}",
+                authentication.getPrincipal(),
+                authentication.getCredentials(),
+                exception
+            );
+            throw new BadCredentialsException("로그인에 실패했습니다.", exception);
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {

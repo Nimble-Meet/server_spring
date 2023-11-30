@@ -1,6 +1,7 @@
 package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.jwt.JwtTokenType;
@@ -8,10 +9,8 @@ import com.nimble.server_spring.modules.auth.JwtToken;
 import com.nimble.server_spring.modules.auth.JwtTokenRepository;
 import com.nimble.server_spring.modules.auth.TokenCookieFactory;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
-import com.nimble.server_spring.modules.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -32,37 +31,43 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     @Override
     public void onAuthenticationSuccess(
         HttpServletRequest request, HttpServletResponse response, Authentication authentication
-    ) throws IOException {
-        String email = (String) authentication.getPrincipal();
-        CustomUserDetails userDetails =
-            (CustomUserDetails) userDetailsService.loadUserByUsername(email);
-        String role = userDetails.getRoleType().getCode();
+    ) {
+        try {
+            String email = (String) authentication.getPrincipal();
+            CustomUserDetails userDetails =
+                (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+            String role = userDetails.getRoleType().getCode();
 
-        AuthToken accessToken = authTokenManager.publishToken(
-            email,
-            role,
-            JwtTokenType.ACCESS
-        );
-        AuthToken refreshToken = authTokenManager.publishToken(
-            email,
-            null,
-            JwtTokenType.REFRESH
-        );
+            AuthToken accessToken = authTokenManager.publishToken(
+                email,
+                role,
+                JwtTokenType.ACCESS
+            );
+            AuthToken refreshToken = authTokenManager.publishToken(
+                email,
+                null,
+                JwtTokenType.REFRESH
+            );
 
-        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userDetails.getUserId())
-            .map(token -> token.reissue(accessToken, refreshToken))
-            .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userDetails.getUserId()));
+            Long userId = userDetails.getUserId();
+            JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
+                .map(token -> token.reissue(accessToken, refreshToken))
+                .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userId));
 
-        response.addCookie(
-            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
-        );
-        response.addCookie(
-            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
-        );
+            response.addCookie(
+                tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
+            );
+            response.addCookie(
+                tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
+            );
 
-        response.addHeader("Content-Type", "application/json; charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_CREATED);
-        response.getWriter()
-            .write(LoginResponseDto.fromJwtToken(jwtToken).toJsonString(objectMapper));
+            ServletResponseWrapper.of(response).sendJsonResponse(
+                HttpServletResponse.SC_CREATED,
+                LoginResponseDto.fromJwtToken(jwtToken).toJsonString(objectMapper)
+            );
+        } catch (Exception e) {
+            log.error("Unknown Exception thrown in onAuthenticationSuccess()", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 }
