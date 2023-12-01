@@ -1,5 +1,8 @@
 package com.nimble.server_spring.infra.security;
 
+import static com.nimble.server_spring.modules.auth.TokenCookieFactory.ACCESS_TOKEN_COOKIE_KEY;
+import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_COOKIE_KEY;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.jwt.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.CorsFilter;
 
@@ -25,8 +29,8 @@ public class SecurityConfig {
     private final CorsFilter corsFilter;
     private final CustomAuthEntryPoint authEntryPoint;
     private final CustomUserDetailsService userDetailsService;
-    private final CustomAuthenticationSuccessHandler authenticationSuccessHandler;
-    private final CustomAuthenticationFailureHandler authenticationFailureHandler;
+    private final LocalLoginSuccessHandler authenticationSuccessHandler;
+    private final LocalLoginFailureHandler authenticationFailureHandler;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -75,6 +79,12 @@ public class SecurityConfig {
             .addFilterBefore(
                 new ExceptionHandlerFilter(objectMapper),
                 UsernamePasswordAuthenticationFilter.class
+            )
+
+            .logout(configurer -> configurer
+                .logoutUrl("/api/auth/logout")
+                .deleteCookies(ACCESS_TOKEN_COOKIE_KEY, REFRESH_TOKEN_COOKIE_KEY)
+                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
             );
 
         return httpSecurity.build();
