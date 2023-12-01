@@ -4,7 +4,7 @@ import static com.nimble.server_spring.modules.auth.TokenCookieFactory.ACCESS_TO
 import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_COOKIE_KEY;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimble.server_spring.infra.jwt.JwtAuthFilter;
+import com.nimble.server_spring.infra.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +31,7 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final LocalLoginSuccessHandler authenticationSuccessHandler;
     private final LocalLoginFailureHandler authenticationFailureHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -48,10 +49,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(
-        HttpSecurity httpSecurity,
-        JwtAuthFilter customJwtFilter
-    ) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
@@ -75,7 +73,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(
                 new ExceptionHandlerFilter(objectMapper),
                 UsernamePasswordAuthenticationFilter.class
