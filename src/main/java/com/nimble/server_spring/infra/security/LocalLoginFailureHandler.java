@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class LocalLoginFailureHandler implements AuthenticationFailureHandler {
 
     private final ObjectMapper objectMapper;
 
@@ -30,10 +30,10 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
             exception.getClass().getSimpleName(),
             exception.getMessage()
         );
-        ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
+        ErrorResponse errorResponse = ErrorCode.LOGIN_FAILED.toErrorResponse();
         ServletResponseWrapper.of(response)
             .sendJsonResponse(
-                HttpServletResponse.SC_UNAUTHORIZED,
+                ErrorCode.LOGIN_FAILED.getHttpStatus().value(),
                 errorResponse.toJsonString(objectMapper)
             );
     }

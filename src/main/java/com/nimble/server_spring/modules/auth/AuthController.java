@@ -1,7 +1,7 @@
 package com.nimble.server_spring.modules.auth;
 
 import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOKEN;
-import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_KEY;
+import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_COOKIE_KEY;
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
@@ -74,7 +74,7 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
-        Cookie refreshTokenCookie = CookieParser.from(request).getCookie(REFRESH_TOKEN_KEY)
+        Cookie refreshTokenCookie = CookieParser.from(request).getCookie(REFRESH_TOKEN_COOKIE_KEY)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
         String refreshToken = refreshTokenCookie.getValue();
 
@@ -109,19 +109,20 @@ public class AuthController {
         );
     }
 
+    @PostMapping("/login/local")
+    @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
+    @ApiErrorCodes({ErrorCode.LOGIN_FAILED})
+    public ResponseEntity<LoginResponseDto> login(
+        @RequestBody @Validated @Parameter(description = "로그인 정보", required = true)
+        LocalLoginRequestDto localLoginDto
+    ) {
+        // LocalLoginFilter에서 처리
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "쿠키의 access token과 refresh token을 삭제 하여 로그아웃 합니다.")
-    @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ResponseEntity<UserResponseDto> logout(
-        HttpServletResponse response
-    ) {
-        User currentUser = authService.getCurrentUser();
-
-        response.addCookie(tokenCookieFactory.createExpiredAccessTokenCookie());
-        response.addCookie(tokenCookieFactory.createExpiredRefreshTokenCookie());
-        return new ResponseEntity<>(
-            UserResponseDto.fromUser(currentUser),
-            HttpStatus.OK
-        );
+    public void logout() {
+        // Spring Security에서 처리
     }
 }
