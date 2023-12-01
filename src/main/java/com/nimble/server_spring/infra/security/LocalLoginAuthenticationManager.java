@@ -22,8 +22,8 @@ public class LocalLoginAuthenticationManager implements AuthenticationManager {
     public Authentication authenticate(
         Authentication authentication
     ) throws AuthenticationException {
-        String email = (String) authentication.getPrincipal();
-        String password = (String) authentication.getCredentials();
+        String email = String.valueOf(authentication.getPrincipal());
+        String password = String.valueOf(authentication.getCredentials());
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {

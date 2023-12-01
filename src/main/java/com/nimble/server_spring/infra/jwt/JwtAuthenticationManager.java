@@ -23,7 +23,7 @@ public class JwtAuthenticationManager implements AuthenticationManager {
     public Authentication authenticate(
         Authentication authentication
     ) throws AuthenticationException {
-        String tokenValue = (String) authentication.getPrincipal();
+        String tokenValue = String.valueOf(authentication.getPrincipal());
 
         Claims tokenClaims = authTokenManager.getTokenClaims(
             tokenValue,

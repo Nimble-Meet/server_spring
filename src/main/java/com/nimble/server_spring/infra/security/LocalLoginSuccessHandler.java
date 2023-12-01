@@ -33,7 +33,7 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(
         HttpServletRequest request, HttpServletResponse response, Authentication authentication
     ) throws IOException {
-        String email = (String) authentication.getPrincipal();
+        String email = String.valueOf(authentication.getPrincipal());
         CustomUserDetails userDetails =
             (CustomUserDetails) userDetailsService.loadUserByUsername(email);
         String role = userDetails.getRoleType().getCode();
