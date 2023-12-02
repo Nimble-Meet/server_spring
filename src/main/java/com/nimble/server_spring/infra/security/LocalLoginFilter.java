@@ -33,12 +33,6 @@ public class LocalLoginFilter extends UsernamePasswordAuthenticationFilter {
         HttpServletRequest request,
         HttpServletResponse response
     ) throws AuthenticationException {
-        if (!POST.name().equalsIgnoreCase(request.getMethod())) {
-            throw new BadCredentialsException(
-                "허용되지 않은 http 메서드입니다. - " + request.getMethod()
-            );
-        }
-
         LocalLoginRequestDto localLoginRequestDto;
         try {
             localLoginRequestDto = RequestBodyParser.from(request)
