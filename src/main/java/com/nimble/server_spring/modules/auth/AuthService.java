@@ -10,12 +10,8 @@ import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,24 +73,5 @@ public class AuthService {
 
         JwtToken newJwtToken = jwtToken.reissue(newAccessToken, newRefreshToken);
         return jwtTokenRepository.save(newJwtToken);
-    }
-
-    public User getCurrentUser() {
-        Object principal = Optional
-            .ofNullable(SecurityContextHolder.getContext().getAuthentication())
-            .map(Authentication::getPrincipal)
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
-
-        if (!(principal instanceof UserDetails)) {
-            Error customError = new Error(
-                "principal is not instance of UserDetails, it is" + principal.getClass()
-            );
-            throw new ErrorCodeException(ErrorCode.INTERNAL_SERVER_ERROR, customError);
-        }
-        String email = ((UserDetails) principal).getUsername();
-
-        return userRepository.findOneByEmail(email).orElseThrow(
-            () -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND)
-        );
     }
 }

@@ -14,6 +14,7 @@ import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
 import com.nimble.server_spring.modules.auth.dto.response.UserResponseDto;
 import com.nimble.server_spring.modules.user.User;
+import com.nimble.server_spring.modules.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
     private final TokenCookieFactory tokenCookieFactory;
 
     @PostMapping("/signup")
@@ -99,9 +102,13 @@ public class AuthController {
 
     @GetMapping("/whoami")
     @Operation(summary = "현재 사용자 정보 조회", description = "현재 사용자 정보를 조회합니다.")
+    @ApiErrorCodes({
+        ErrorCode.UNAUTHENTICATED_REQUEST,
+        ErrorCode.USER_NOT_FOUND,
+    })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ResponseEntity<UserResponseDto> whoami() {
-        User currentUser = authService.getCurrentUser();
+    public ResponseEntity<UserResponseDto> whoami(Principal principal) {
+        User currentUser = userService.getUserByPrincipal(principal);
 
         return new ResponseEntity<>(
             UserResponseDto.fromUser(currentUser),
