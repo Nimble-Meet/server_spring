@@ -12,6 +12,7 @@ import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class AuthService {
     private final JwtTokenRepository jwtTokenRepository;
     private final UserRepository userRepository;
     private final AuthTokenManager authTokenManager;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public User signup(LocalSignupRequestDto localSignupDto) {
@@ -33,14 +35,12 @@ public class AuthService {
             throw new ErrorCodeException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
-        EncryptedPassword encryptedPassword = EncryptedPassword.encryptFrom(
-            localSignupDto.getPassword()
-        );
+        String encodedPassword = passwordEncoder.encode(localSignupDto.getPassword());
 
         User user = User.builder()
             .email(localSignupDto.getEmail())
             .nickname(localSignupDto.getNickname())
-            .password(encryptedPassword.getPassword())
+            .password(encodedPassword)
             .providerType(OauthProvider.LOCAL)
             .build();
 

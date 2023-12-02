@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
@@ -35,9 +36,14 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     public UsernamePasswordAuthenticationFilter customAuthenticationProcessingFilter() {
         LocalLoginFilter filter = new LocalLoginFilter(
-            new LocalLoginAuthenticationManager(userDetailsService, new BCryptPasswordEncoder()),
+            new LocalLoginAuthenticationManager(userDetailsService, passwordEncoder()),
             objectMapper
         );
         filter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
