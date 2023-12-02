@@ -32,19 +32,22 @@ public class JwtToken {
     private LocalDateTime expiresAt;
 
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
+
+    @Column(name = "user_id")
+    private Long userId;
 
     boolean equalsAccessToken(String accessToken) {
         return this.accessToken.equals(accessToken);
     }
 
-    public static JwtToken issue(AuthToken accessToken, AuthToken refreshToken, User user) {
+    public static JwtToken issue(AuthToken accessToken, AuthToken refreshToken, Long userId) {
         return builder()
             .accessToken(accessToken.getToken())
             .refreshToken(refreshToken.getToken())
             .expiresAt(refreshToken.getExpiresAt())
-            .user(user)
+            .userId(userId)
             .build();
     }
 

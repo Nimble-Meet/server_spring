@@ -1,11 +1,13 @@
 package com.nimble.server_spring.infra.security;
 
-import com.nimble.server_spring.infra.jwt.JwtAuthFilter;
+import static com.nimble.server_spring.modules.auth.TokenCookieFactory.ACCESS_TOKEN_COOKIE_KEY;
+import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_TOKEN_COOKIE_KEY;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimble.server_spring.infra.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.CorsFilter;
 
 @Configuration
@@ -25,13 +29,11 @@ public class SecurityConfig {
 
     private final CorsFilter corsFilter;
     private final CustomAuthEntryPoint authEntryPoint;
-
-    @Bean
-    AuthenticationManager authenticationManager(
-        AuthenticationConfiguration authenticationConfiguration
-    ) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+    private final CustomUserDetailsService userDetailsService;
+    private final LocalLoginSuccessHandler authenticationSuccessHandler;
+    private final LocalLoginFailureHandler authenticationFailureHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -39,10 +41,21 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(
-        HttpSecurity httpSecurity,
-        JwtAuthFilter customJwtFilter
-    ) throws Exception {
+    public UsernamePasswordAuthenticationFilter customAuthenticationProcessingFilter() {
+        LocalLoginFilter filter = new LocalLoginFilter(
+            new LocalLoginAuthenticationManager(userDetailsService, passwordEncoder()),
+            objectMapper
+        );
+        filter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+        filter.setAuthenticationFailureHandler(authenticationFailureHandler);
+        filter.setRequiresAuthenticationRequestMatcher(
+            new AntPathRequestMatcher("/api/auth/login/local", "POST")
+        );
+        return filter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
@@ -66,7 +79,17 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            .addFilterBefore(customJwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(
+                new ExceptionHandlerFilter(objectMapper),
+                UsernamePasswordAuthenticationFilter.class
+            )
+
+            .logout(configurer -> configurer
+                .logoutUrl("/api/auth/logout")
+                .deleteCookies(ACCESS_TOKEN_COOKIE_KEY, REFRESH_TOKEN_COOKIE_KEY)
+                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+            );
 
         return httpSecurity.build();
     }

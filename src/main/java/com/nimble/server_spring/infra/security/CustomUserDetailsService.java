@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-  private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
-  @Override
-  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-    User findUser = userRepository.findOneByEmail(email)
-        .orElseThrow(() -> new UsernameNotFoundException("Cannot find user with email: " + email));
-    return UserPrincipal.from(findUser);
-  }
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User findUser = userRepository.findOneByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("가입하지 않은 이메일입니다. : " + email));
+        return CustomUserDetails.from(findUser);
+    }
 }

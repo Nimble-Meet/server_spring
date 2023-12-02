@@ -6,36 +6,35 @@ import com.nimble.server_spring.infra.error.ErrorResponse;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
-public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
+@Slf4j
+public class LocalLoginFailureHandler implements AuthenticationFailureHandler {
 
     private final ObjectMapper objectMapper;
 
     @Override
-    public void commence(
+    public void onAuthenticationFailure(
         HttpServletRequest request,
         HttpServletResponse response,
-        AuthenticationException authException
-    ) {
-        log.info("인증에 실패했습니다.", authException);
-        ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
-
-        try {
-            ServletResponseWrapper.of(response).sendJsonResponse(
-                HttpServletResponse.SC_UNAUTHORIZED,
+        AuthenticationException exception
+    ) throws IOException {
+        log.info("아이디/비밀번호 로그인에 실패했습니다. - {}: {}",
+            exception.getClass().getSimpleName(),
+            exception.getMessage()
+        );
+        ErrorResponse errorResponse = ErrorCode.LOGIN_FAILED.toErrorResponse();
+        ServletResponseWrapper.of(response)
+            .sendJsonResponse(
+                ErrorCode.LOGIN_FAILED.getHttpStatus().value(),
                 errorResponse.toJsonString(objectMapper)
             );
-        } catch (Exception e) {
-            log.error("Unknow Exception thrown in commence()", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
     }
 }
