@@ -75,7 +75,8 @@ public class ChatController {
             .build();
         chatRepository.save(chat);
 
-        headerAccessor.setSessionAttributes(Map.of("memberId", meetMember.getId()));
+        Optional.ofNullable(headerAccessor.getSessionAttributes())
+            .ifPresent(attributes -> attributes.put("memberId", meetMember.getId()));
         template.convertAndSend(
             "/subscribe/chat/meet/" + meetId,
             ChatResponseDto.fromChat(chat)
