@@ -10,27 +10,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class MeetService {
 
     private final MeetRepository meetRepository;
     private final UserRepository userRepository;
-    private final MeetMemberRepository meetMemberRepository;
 
     private static final int INVITE_LIMIT_NUMBER = 3;
 
     public Meet createMeet(User user, MeetCreateRequestDto meetCreateRequestDto) {
-        Meet meet = meetRepository.save(
-            Meet.builder()
-                .meetName(meetCreateRequestDto.getMeetName())
-                .description(meetCreateRequestDto.getDescription())
-                .host(user)
-                .meetMembers(new ArrayList<>())
-                .build()
-        );
+        Meet meet = Meet.builder()
+            .meetName(meetCreateRequestDto.getMeetName())
+            .description(meetCreateRequestDto.getDescription())
+            .host(user)
+            .meetMembers(new ArrayList<>())
+            .build();
 
         MeetMember meetMember = MeetMember.builder()
             .meet(meet)
@@ -38,10 +36,9 @@ public class MeetService {
             .memberRole(MemberRole.HOST)
             .isEntered(false)
             .build();
-        meetMemberRepository.save(meetMember);
-
         meet.addMeetMember(meetMember);
-        return meet;
+
+        return meetRepository.save(meet);
     }
 
     public MeetMember invite(
@@ -75,7 +72,9 @@ public class MeetService {
             .isEntered(false)
             .memberRole(MemberRole.MEMBER)
             .build();
-        return meetMemberRepository.save(meetMember);
+        meet.addMeetMember(meetMember);
+
+        return meetMember;
     }
 
     public MeetMember kickOut(User currentUser, Long meetId, Long memberId) {
@@ -89,7 +88,6 @@ public class MeetService {
         MeetMember meetMember = meet.findMember(memberId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEMBER_NOT_FOUND));
         meet.getMeetMembers().remove(meetMember);
-        meetMemberRepository.delete(meetMember);
 
         return meetMember;
     }

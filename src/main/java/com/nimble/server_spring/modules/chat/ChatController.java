@@ -14,6 +14,7 @@ import com.nimble.server_spring.modules.meet.MeetMember;
 import com.nimble.server_spring.modules.meet.MeetMemberRepository;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
+import jakarta.annotation.Nullable;
 import java.security.Principal;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -40,6 +42,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Controller
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class ChatController {
 
     private final SimpMessageSendingOperations template;
@@ -63,7 +66,6 @@ public class ChatController {
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND));
 
         meetMember.enterMeet();
-        meetMemberRepository.save(meetMember);
 
         Chat chat = Chat.builder()
             .chatType(ChatType.ENTER)
@@ -127,7 +129,6 @@ public class ChatController {
         }
 
         meetMember.leaveMeet();
-        meetMemberRepository.save(meetMember);
 
         Chat chat = Chat.builder()
             .chatType(ChatType.LEAVE)
