@@ -54,7 +54,7 @@ public class Meet {
     @JoinColumn(name = "host_id")
     private User host;
 
-    @OneToMany(mappedBy = "meet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "meet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MeetMember> meetMembers = new ArrayList<>();
 
@@ -64,8 +64,8 @@ public class Meet {
 
     public Optional<MeetMember> findMember(Long memberId) {
         return this.meetMembers.stream()
-                .filter(meetMember -> meetMember.getId().equals(memberId))
-                .findFirst();
+            .filter(meetMember -> meetMember.getId().equals(memberId))
+            .findFirst();
     }
 
     public void addMeetMember(MeetMember meetMember) {

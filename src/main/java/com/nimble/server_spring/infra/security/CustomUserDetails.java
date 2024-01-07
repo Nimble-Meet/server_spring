@@ -28,6 +28,7 @@ public class CustomUserDetails implements OAuth2User, UserDetails, OidcUser {
     private final OauthProvider providerType;
     private final RoleType roleType;
     private final Collection<GrantedAuthority> authorities;
+    private final User user;
     private Map<String, Object> attributes;
 
     @Override
@@ -82,7 +83,8 @@ public class CustomUserDetails implements OAuth2User, UserDetails, OidcUser {
             user.getPassword(),
             user.getProviderType(),
             RoleType.USER,
-            Collections.singletonList(new SimpleGrantedAuthority(RoleType.USER.getCode()))
+            Collections.singletonList(new SimpleGrantedAuthority(RoleType.USER.getCode())),
+            user
         );
     }
 

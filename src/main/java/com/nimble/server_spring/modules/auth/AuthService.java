@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@Transactional
 public class AuthService {
 
     private final JwtTokenRepository jwtTokenRepository;
@@ -71,7 +72,6 @@ public class AuthService {
             JwtTokenType.REFRESH
         );
 
-        JwtToken newJwtToken = jwtToken.reissue(newAccessToken, newRefreshToken);
-        return jwtTokenRepository.save(newJwtToken);
+        return jwtToken.reissue(newAccessToken, newRefreshToken);
     }
 }
