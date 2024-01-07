@@ -35,19 +35,16 @@ public class JwtToken {
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
-    @Column(name = "user_id")
-    private Long userId;
-
     boolean equalsAccessToken(String accessToken) {
         return this.accessToken.equals(accessToken);
     }
 
-    public static JwtToken issue(AuthToken accessToken, AuthToken refreshToken, Long userId) {
+    public static JwtToken issue(AuthToken accessToken, AuthToken refreshToken, User user) {
         return builder()
             .accessToken(accessToken.getToken())
             .refreshToken(refreshToken.getToken())
             .expiresAt(refreshToken.getExpiresAt())
-            .userId(userId)
+            .user(user)
             .build();
     }
 

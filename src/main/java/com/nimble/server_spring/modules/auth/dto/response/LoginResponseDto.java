@@ -19,7 +19,7 @@ public class LoginResponseDto {
 
     public static LoginResponseDto fromJwtToken(JwtToken jwtToken) {
         return LoginResponseDto.builder()
-            .userId(jwtToken.getUserId())
+            .userId(jwtToken.getUser().getId())
             .accessToken(jwtToken.getAccessToken())
             .build();
     }

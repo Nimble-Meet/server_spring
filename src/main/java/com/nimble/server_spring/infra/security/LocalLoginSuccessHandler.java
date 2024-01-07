@@ -51,10 +51,9 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
             JwtTokenType.REFRESH
         );
 
-        Long userId = userDetails.getUserId();
-        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
+        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userDetails.getUserId())
             .map(token -> token.reissue(accessToken, refreshToken))
-            .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userId));
+            .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userDetails.getUser()));
         jwtTokenRepository.save(jwtToken);
 
         response.addCookie(
