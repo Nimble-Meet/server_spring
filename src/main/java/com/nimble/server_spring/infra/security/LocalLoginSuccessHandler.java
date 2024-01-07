@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final TokenCookieFactory tokenCookieFactory;
 
     @Override
+    @Transactional
     public void onAuthenticationSuccess(
         HttpServletRequest request, HttpServletResponse response, Authentication authentication
     ) throws IOException {
@@ -53,6 +55,7 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
         JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
             .map(token -> token.reissue(accessToken, refreshToken))
             .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userId));
+        jwtTokenRepository.save(jwtToken);
 
         response.addCookie(
             tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
