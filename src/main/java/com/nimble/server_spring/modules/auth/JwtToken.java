@@ -4,36 +4,45 @@ import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@EqualsAndHashCode(of = "id")
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class JwtToken {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
+    @NotNull
     @NotBlank
     private String accessToken;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
+    @NotNull
     @NotBlank
     private String refreshToken;
 
-    @Column(nullable = false)
+    @NotNull
     private LocalDateTime expiresAt;
 
     @OneToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
+    @NotNull
     private User user;
+
+    @Builder
+    public JwtToken(String accessToken, String refreshToken, LocalDateTime expiresAt, User user) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.expiresAt = expiresAt;
+        this.user = user;
+    }
 
     boolean equalsAccessToken(String accessToken) {
         return this.accessToken.equals(accessToken);

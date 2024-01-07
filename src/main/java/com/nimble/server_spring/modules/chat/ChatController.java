@@ -70,8 +70,8 @@ public class ChatController {
         Chat chat = Chat.builder()
             .chatType(ChatType.ENTER)
             .email(user.getEmail())
-            .memberId(meetMember.getId())
-            .meetId(meetId)
+            .meet(meetMember.getMeet())
+            .meetMember(meetMember)
             .build();
         chatRepository.save(chat);
 
@@ -101,9 +101,9 @@ public class ChatController {
         Chat chat = Chat.builder()
             .chatType(ChatType.TALK)
             .email(user.getEmail())
-            .memberId(meetMember.getId())
-            .meetId(meetId)
             .message(chatTalkRequestDto.getMessage())
+            .meet(meetMember.getMeet())
+            .meetMember(meetMember)
             .build();
         chatRepository.save(chat);
 
@@ -134,7 +134,8 @@ public class ChatController {
         Chat chat = Chat.builder()
             .chatType(ChatType.LEAVE)
             .email(email)
-            .memberId(meetMember.getId())
+            .meet(meetMember.getMeet())
+            .meetMember(meetMember)
             .build();
         chatRepository.save(chat);
 

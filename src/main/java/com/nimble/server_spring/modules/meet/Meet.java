@@ -18,12 +18,9 @@ import java.util.List;
 
 @Entity
 @Getter
-@ToString
-@EqualsAndHashCode(of = "id")
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
+@ToString(of = {"id", "meetName", "description"})
 public class Meet {
 
     @Id
@@ -50,13 +47,20 @@ public class Meet {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull
     @JoinColumn(name = "host_id")
+    @NotNull
     private User host;
 
     @OneToMany(mappedBy = "meet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
+    @NotNull
     private List<MeetMember> meetMembers = new ArrayList<>();
+
+    @Builder
+    public Meet(String meetName, String description, User host) {
+        this.meetName = meetName;
+        this.description = description;
+        this.host = host;
+    }
 
     public boolean isHost(Long userId) {
         return this.host.getId().equals(userId);
