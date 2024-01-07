@@ -1,5 +1,6 @@
 package com.nimble.server_spring.modules.meet;
 
+import com.nimble.server_spring.infra.persistence.BaseEntity;
 import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -8,34 +9,19 @@ import java.util.Optional;
 
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 @ToString(of = {"id", "meetName", "description"})
-public class Meet {
+public class Meet extends BaseEntity {
 
     @Id
     @GeneratedValue
     private Long id;
-
-    @Column
-    @NotNull
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @Column
-    @NotNull
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 
     @Column
     @NotNull

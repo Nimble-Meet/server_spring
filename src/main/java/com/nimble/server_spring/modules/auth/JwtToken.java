@@ -1,6 +1,7 @@
 package com.nimble.server_spring.modules.auth;
 
 import com.nimble.server_spring.infra.jwt.AuthToken;
+import com.nimble.server_spring.infra.persistence.BaseEntity;
 import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -12,7 +13,8 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class JwtToken {
+@ToString(of = {"id", "accessToken", "refreshToken", "expiresAt"})
+public class JwtToken extends BaseEntity {
 
     @Id
     @GeneratedValue
