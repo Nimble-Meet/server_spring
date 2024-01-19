@@ -15,7 +15,7 @@ import lombok.ToString;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(of = {"id", "chatType", "email", "message"})
+@ToString(of = {"id", "chatType", "message"})
 public class Chat extends BaseEntity {
 
     @Id
@@ -25,9 +25,6 @@ public class Chat extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @NotNull
     private ChatType chatType;
-
-    @NotNull
-    private String email;
 
     private String message;
 
@@ -45,13 +42,11 @@ public class Chat extends BaseEntity {
     @Builder
     public Chat(
         ChatType chatType,
-        String email,
         String message,
         Meet meet,
         MeetMember meetMember
     ) {
         this.chatType = chatType;
-        this.email = email;
         this.message = message;
         this.meet = meet;
         this.meetMember = meetMember;

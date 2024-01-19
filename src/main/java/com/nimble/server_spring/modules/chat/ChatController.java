@@ -69,7 +69,6 @@ public class ChatController {
 
         Chat chat = Chat.builder()
             .chatType(ChatType.ENTER)
-            .email(user.getEmail())
             .meet(meetMember.getMeet())
             .meetMember(meetMember)
             .build();
@@ -100,7 +99,6 @@ public class ChatController {
 
         Chat chat = Chat.builder()
             .chatType(ChatType.TALK)
-            .email(user.getEmail())
             .message(chatTalkRequestDto.getMessage())
             .meet(meetMember.getMeet())
             .meetMember(meetMember)
@@ -133,7 +131,6 @@ public class ChatController {
 
         Chat chat = Chat.builder()
             .chatType(ChatType.LEAVE)
-            .email(email)
             .meet(meetMember.getMeet())
             .meetMember(meetMember)
             .build();
