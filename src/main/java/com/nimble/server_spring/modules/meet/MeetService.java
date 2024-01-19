@@ -27,14 +27,12 @@ public class MeetService {
             .meetName(meetCreateRequestDto.getMeetName())
             .description(meetCreateRequestDto.getDescription())
             .host(user)
-            .meetMembers(new ArrayList<>())
             .build();
 
         MeetMember meetMember = MeetMember.builder()
             .meet(meet)
             .user(user)
             .memberRole(MemberRole.HOST)
-            .isEntered(false)
             .build();
         meet.addMeetMember(meetMember);
 
@@ -69,7 +67,6 @@ public class MeetService {
         MeetMember meetMember = MeetMember.builder()
             .meet(meet)
             .user(userToInvite)
-            .isEntered(false)
             .memberRole(MemberRole.MEMBER)
             .build();
         meet.addMeetMember(meetMember);

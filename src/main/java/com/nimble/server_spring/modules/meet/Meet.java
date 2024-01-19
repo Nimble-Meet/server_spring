@@ -1,5 +1,6 @@
 package com.nimble.server_spring.modules.meet;
 
+import com.nimble.server_spring.infra.persistence.BaseEntity;
 import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -8,37 +9,19 @@ import java.util.Optional;
 
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
-@ToString
-@EqualsAndHashCode(of = "id")
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class Meet {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(of = {"id", "meetName", "description"})
+public class Meet extends BaseEntity {
 
     @Id
     @GeneratedValue
     private Long id;
-
-    @Column
-    @NotNull
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @Column
-    @NotNull
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 
     @Column
     @NotNull
@@ -50,13 +33,20 @@ public class Meet {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull
     @JoinColumn(name = "host_id")
+    @NotNull
     private User host;
 
     @OneToMany(mappedBy = "meet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
+    @NotNull
     private List<MeetMember> meetMembers = new ArrayList<>();
+
+    @Builder
+    public Meet(String meetName, String description, User host) {
+        this.meetName = meetName;
+        this.description = description;
+        this.host = host;
+    }
 
     public boolean isHost(Long userId) {
         return this.host.getId().equals(userId);

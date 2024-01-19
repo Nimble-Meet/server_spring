@@ -40,9 +40,10 @@ public class AuthService {
 
         User user = User.builder()
             .email(localSignupDto.getEmail())
-            .nickname(localSignupDto.getNickname())
             .password(encodedPassword)
+            .nickname(localSignupDto.getNickname())
             .providerType(OauthProvider.LOCAL)
+            .providerId(null)
             .build();
 
         return userRepository.save(user);

@@ -1,53 +1,52 @@
 package com.nimble.server_spring.modules.user;
 
+import com.nimble.server_spring.infra.persistence.BaseEntity;
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@ToString
-@EqualsAndHashCode(of = "id")
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class User {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(of = {"id", "email", "nickname"})
+public class User extends BaseEntity {
 
-  @Id
-  @GeneratedValue
-  private Long id;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-  @Column(nullable = false)
-  @CreatedDate
-  private LocalDateTime createdAt;
+    @Column(unique = true)
+    @NotNull
+    @Email
+    private String email;
 
-  @Column(nullable = false)
-  @LastModifiedDate
-  private LocalDateTime updatedAt;
+    @Pattern(regexp = "^\\$2[ayb]\\$.{56}$", message = "비밀번호는 BCrpyt로 암호화된 문자열이어야 합니다.")
+    private String password;
 
-  @Column(unique = true, nullable = false)
-  @Email
-  private String email;
+    @NotNull
+    private String nickname;
 
-  @Pattern(regexp = "^\\$2[ayb]\\$.{56}$", message = "비밀번호는 BCrpyt로 암호화된 문자열이어야 합니다.")
-  private String password;
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private OauthProvider providerType;
 
-  @Column()
-  private String nickname;
+    private String providerId;
 
-  @Column
-  @Enumerated(EnumType.STRING)
-  @Builder.Default
-  private OauthProvider providerType = OauthProvider.LOCAL;
-
-  @Column(nullable = true)
-  private String providerId;
+    @Builder
+    public User(
+        String email,
+        String password,
+        String nickname,
+        OauthProvider providerType,
+        String providerId
+    ) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.providerType = providerType;
+        this.providerId = providerId;
+    }
 }

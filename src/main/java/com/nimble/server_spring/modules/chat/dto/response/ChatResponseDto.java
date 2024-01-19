@@ -24,8 +24,8 @@ public class ChatResponseDto {
         return ChatResponseDto.builder()
             .createdAt(chat.getCreatedAt())
             .chatType(chat.getChatType())
-            .email(chat.getEmail())
-            .memberId(chat.getMemberId())
+            .email(chat.getMeetMember().getUser().getEmail())
+            .memberId(chat.getMeetMember().getId())
             .message(chat.getMessage())
             .build();
     }

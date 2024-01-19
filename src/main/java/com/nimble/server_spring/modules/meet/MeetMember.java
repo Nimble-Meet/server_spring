@@ -14,11 +14,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
-@EqualsAndHashCode(of = "id")
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
+@ToString(of = {"id", "memberRole", "isEntered"})
 public class MeetMember {
 
     @Id
@@ -34,28 +32,28 @@ public class MeetMember {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull
     @JoinColumn(name = "meet_id")
+    @NotNull
     private Meet meet;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull
     @JoinColumn(name = "user_id")
+    @NotNull
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     private MemberRole memberRole;
 
     @Convert(converter = BooleanToYNConverter.class)
-    private boolean isEntered;
+    @NotNull
+    private boolean isEntered = false;
 
-    @Override
-    public String toString() {
-        return "MeetMember{" +
-               "id=" + id +
-               ", createdAt=" + createdAt +
-               ", updatedAt=" + updatedAt +
-               '}';
+    @Builder
+    public MeetMember(Meet meet, User user, MemberRole memberRole) {
+        this.meet = meet;
+        this.user = user;
+        this.memberRole = memberRole;
     }
 
     public void enterMeet() {
