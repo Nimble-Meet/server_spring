@@ -10,9 +10,11 @@ spring:
       minimum-idle: 10
       maximum-pool-size: 20
   jpa:
-    #    show_sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
@@ -25,6 +27,7 @@ jwt:
 logging:
   level:
     org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.hibernate.sql: debug
 
 springdoc:
   swagger-ui:

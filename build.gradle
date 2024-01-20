@@ -37,6 +37,8 @@ dependencies {
     // spring security messaging
     implementation 'org.springframework.security:spring-security-messaging'
 
+    // spring data jpa logging
+    developmentOnly 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
     // querydsl
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
     annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
