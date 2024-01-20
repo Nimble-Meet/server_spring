@@ -46,7 +46,7 @@ public class MeetController {
     @GetMapping
     @Operation(summary = "미팅 목록 조회", description = "내가 생성했거나 초대 받은 미팅을 조회합니다.")
     public ResponseEntity<List<MeetResponseDto>> getMeets(Principal principal) {
-        User currentUser = userService.getUserByPrincipal(principal);
+        User currentUser = userService.getUserByPrincipalLazy(principal);
 
         List<Meet> meetList = meetRepository.findHostedOrInvitedMeetsByUserId(currentUser.getId());
         List<MeetResponseDto> meetResponseDtoList = meetList.stream()
@@ -84,7 +84,7 @@ public class MeetController {
         Long meetId,
         Principal principal
     ) {
-        User currentUser = userService.getUserByPrincipal(principal);
+        User currentUser = userService.getUserByPrincipalLazy(principal);
 
         Meet meet = meetRepository.findMeetByIdIfHostedOrInvited(meetId, currentUser.getId())
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
@@ -107,7 +107,7 @@ public class MeetController {
         MeetInviteRequestDto meetInviteRequestDto,
         Principal principal
     ) {
-        User currentUser = userService.getUserByPrincipal(principal);
+        User currentUser = userService.getUserByPrincipalLazy(principal);
 
         MeetMember meetMember = meetService.invite(
             currentUser,
@@ -133,7 +133,7 @@ public class MeetController {
         Long memberId,
         Principal principal
     ) {
-        User currentUser = userService.getUserByPrincipal(principal);
+        User currentUser = userService.getUserByPrincipalLazy(principal);
 
         MeetMember meetMember = meetService.kickOut(
             currentUser,
@@ -161,7 +161,7 @@ public class MeetController {
         Integer size,
         Principal principal
     ) {
-        User currentUser = userService.getUserByPrincipal(principal);
+        User currentUser = userService.getUserByPrincipalLazy(principal);
         if (!meetMemberRepository.existsByUser_IdAndMeet_Id(
             currentUser.getId(),
             meetId

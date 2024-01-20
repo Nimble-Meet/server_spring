@@ -63,12 +63,12 @@ public class AuthService {
         }
 
         AuthToken newAccessToken = authTokenManager.publishToken(
-            jwtToken.getUser().getEmail(),
+            jwtToken.getUser().getId(),
             RoleType.USER.getCode(),
             JwtTokenType.ACCESS
         );
         AuthToken newRefreshToken = authTokenManager.publishToken(
-            jwtToken.getUser().getEmail(),
+            jwtToken.getUser().getId(),
             null,
             JwtTokenType.REFRESH
         );

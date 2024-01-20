@@ -20,7 +20,14 @@ public class UserService {
     }
 
     public User getUserByPrincipal(Principal principal) {
-        String email = principal.getName();
-        return getUserByEmail(email);
+        Long userId = Long.parseLong(principal.getName());
+        return userRepository.findById(userId).orElseThrow(
+            () -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND)
+        );
+    }
+
+    public User getUserByPrincipalLazy(Principal principal) {
+        Long userId = Long.parseLong(principal.getName());
+        return userRepository.getReferenceById(userId);
     }
 }

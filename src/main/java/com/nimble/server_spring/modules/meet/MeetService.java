@@ -40,13 +40,14 @@ public class MeetService {
     }
 
     public MeetMember invite(
-        User currentUser, Long meetId,
+        User currentUser,
+        Long meetId,
         MeetInviteRequestDto meetInviteRequestDto
     ) {
         Meet meet = meetRepository.findById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
-        if (!meet.isHost(currentUser.getId())) {
+        if (!meet.isHost(currentUser)) {
             throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
         }
 
@@ -78,7 +79,7 @@ public class MeetService {
         Meet meet = meetRepository.findById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
-        if (!meet.isHost(currentUser.getId())) {
+        if (!meet.isHost(currentUser)) {
             throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
         }
 

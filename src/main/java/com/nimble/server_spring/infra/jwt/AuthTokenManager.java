@@ -8,7 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public interface AuthTokenManager {
 
-    AuthToken publishToken(String email, @Nullable String role, JwtTokenType tokenType);
+    AuthToken publishToken(Long userId, @Nullable String role, JwtTokenType tokenType);
 
     Optional<Claims> getTokenClaims(String tokenValue, JwtTokenType tokenType);
 

@@ -34,10 +34,10 @@ public class AuthTokenManagerImpl implements AuthTokenManager {
         this.refreshTokenExpiry = refreshTokenExpiry * 1000;
     }
 
-    public AuthToken publishToken(String email, @Nullable String role, JwtTokenType tokenType) {
+    public AuthToken publishToken(Long userId, @Nullable String role, JwtTokenType tokenType) {
         Date tokenExpiry = getTokenExpiryOf(tokenType);
         Key tokenKey = getKeyOf(tokenType);
-        String tokenValue = buildTokenValue(email, tokenExpiry, tokenKey, role);
+        String tokenValue = buildTokenValue(userId.toString(), tokenExpiry, tokenKey, role);
         return new AuthToken(tokenValue, tokenExpiry);
     }
 

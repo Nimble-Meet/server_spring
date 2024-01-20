@@ -41,12 +41,12 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
         String role = userDetails.getRoleType().getCode();
 
         AuthToken accessToken = authTokenManager.publishToken(
-            email,
+            userDetails.getUser().getId(),
             role,
             JwtTokenType.ACCESS
         );
         AuthToken refreshToken = authTokenManager.publishToken(
-            email,
+            userDetails.getUser().getId(),
             null,
             JwtTokenType.REFRESH
         );

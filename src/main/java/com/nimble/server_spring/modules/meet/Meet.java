@@ -48,8 +48,8 @@ public class Meet extends BaseEntity {
         this.host = host;
     }
 
-    public boolean isHost(Long userId) {
-        return this.host.getId().equals(userId);
+    public boolean isHost(User user) {
+        return this.host.getId().equals(user.getId());
     }
 
     public Optional<MeetMember> findMember(Long memberId) {
