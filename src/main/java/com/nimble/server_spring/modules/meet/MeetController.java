@@ -5,6 +5,8 @@ import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOK
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
+import com.nimble.server_spring.modules.chat.ChatRepository;
+import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
 import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequestDto;
 import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequestDto;
 import com.nimble.server_spring.modules.meet.dto.response.MeetResponseDto;
@@ -17,6 +19,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -34,6 +40,8 @@ public class MeetController {
     private final UserService userService;
     private final MeetService meetService;
     private final MeetRepository meetRepository;
+    private final MeetMemberRepository meetMemberRepository;
+    private final ChatRepository chatRepository;
 
     @GetMapping
     @Operation(summary = "미팅 목록 조회", description = "내가 생성했거나 초대 받은 미팅을 조회합니다.")
@@ -137,5 +145,35 @@ public class MeetController {
             MemberResponseDto.fromMeetMember(meetMember),
             HttpStatus.OK
         );
+    }
+
+    @GetMapping("/{meetId}/chat")
+    @Operation(summary = "채팅 목록 조회", description = "특정 미팅의 채팅 목록을 조회합니다.")
+    @ApiErrorCodes({
+        ErrorCode.NOT_MEET_MEMBER
+    })
+    public ResponseEntity<Slice<ChatResponseDto>> getChats(
+        @PathVariable @Parameter(description = "채팅 목록을 조회할 미팅의 ID", required = true)
+        Long meetId,
+        @RequestParam @Parameter(description = "현재 페이지")
+        Integer page,
+        @RequestParam @Parameter(description = "페이지 크기")
+        Integer size,
+        Principal principal
+    ) {
+        User currentUser = userService.getUserByPrincipal(principal);
+        if (!meetMemberRepository.existsByUser_IdAndMeet_Id(
+            currentUser.getId(),
+            meetId
+        )) {
+            throw new ErrorCodeException(ErrorCode.NOT_MEET_MEMBER);
+        }
+
+        Slice<ChatResponseDto> chatResponsDtoSlice = chatRepository.findAllByMeetId(
+            meetId,
+            PageRequest.of(page, size, Sort.by(Direction.DESC, "createdAt"))
+        );
+
+        return new ResponseEntity<>(chatResponsDtoSlice, HttpStatus.OK);
     }
 }
