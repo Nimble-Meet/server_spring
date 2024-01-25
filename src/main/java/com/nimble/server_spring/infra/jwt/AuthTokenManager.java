@@ -1,5 +1,6 @@
 package com.nimble.server_spring.infra.jwt;
 
+import com.nimble.server_spring.infra.security.RoleType;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Nullable;
 import java.util.Collection;
@@ -8,7 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public interface AuthTokenManager {
 
-    AuthToken publishToken(Long userId, @Nullable String role, JwtTokenType tokenType);
+    AuthToken publishToken(Long userId, @Nullable RoleType role, JwtTokenType tokenType);
 
     Optional<Claims> getTokenClaims(String tokenValue, JwtTokenType tokenType);
 

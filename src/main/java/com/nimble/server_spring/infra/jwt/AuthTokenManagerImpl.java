@@ -1,5 +1,6 @@
 package com.nimble.server_spring.infra.jwt;
 
+import com.nimble.server_spring.infra.security.RoleType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.Nullable;
@@ -34,9 +35,15 @@ public class AuthTokenManagerImpl implements AuthTokenManager {
         this.refreshTokenExpiry = refreshTokenExpiry * 1000;
     }
 
-    public AuthToken publishToken(Long userId, @Nullable String role, JwtTokenType tokenType) {
+    public AuthToken publishToken(
+        Long userId, @Nullable RoleType roleType, JwtTokenType tokenType
+    ) {
         Date tokenExpiry = getTokenExpiryOf(tokenType);
         Key tokenKey = getKeyOf(tokenType);
+        String role = Optional.ofNullable(roleType)
+            .map(RoleType::getCode)
+            .orElse(null);
+
         String tokenValue = buildTokenValue(userId.toString(), tokenExpiry, tokenKey, role);
         return new AuthToken(tokenValue, tokenExpiry);
     }

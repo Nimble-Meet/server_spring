@@ -45,7 +45,7 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         AuthToken accessToken = authTokenManager.publishToken(
             userId,
-            roleType.getCode(),
+            roleType,
             JwtTokenType.ACCESS
         );
         AuthToken refreshToken = authTokenManager.publishToken(
