@@ -1,6 +1,7 @@
 package com.nimble.server_spring.infra.http;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Optional;
 import org.springframework.util.StringUtils;
 
 public class BearerTokenParser {
@@ -18,12 +19,11 @@ public class BearerTokenParser {
         return new BearerTokenParser(request);
     }
 
-    public String getToken() {
+    public Optional<String> getToken() {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith(BEARER_PREFIX)) {
-            return null;
+            return Optional.empty();
         }
-        return bearerToken.substring(BEARER_PREFIX.length());
-
+        return Optional.of(bearerToken.substring(BEARER_PREFIX.length()));
     }
 }

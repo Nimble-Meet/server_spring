@@ -1,5 +1,6 @@
 package com.nimble.server_spring.infra.jwt;
 
+import com.nimble.server_spring.infra.security.RoleType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.Nullable;
@@ -34,10 +35,16 @@ public class AuthTokenManagerImpl implements AuthTokenManager {
         this.refreshTokenExpiry = refreshTokenExpiry * 1000;
     }
 
-    public AuthToken publishToken(String email, @Nullable String role, JwtTokenType tokenType) {
+    public AuthToken publishToken(
+        Long userId, @Nullable RoleType roleType, JwtTokenType tokenType
+    ) {
         Date tokenExpiry = getTokenExpiryOf(tokenType);
         Key tokenKey = getKeyOf(tokenType);
-        String tokenValue = buildTokenValue(email, tokenExpiry, tokenKey, role);
+        String role = Optional.ofNullable(roleType)
+            .map(RoleType::getCode)
+            .orElse(null);
+
+        String tokenValue = buildTokenValue(userId.toString(), tokenExpiry, tokenKey, role);
         return new AuthToken(tokenValue, tokenExpiry);
     }
 
@@ -67,25 +74,21 @@ public class AuthTokenManagerImpl implements AuthTokenManager {
 
     public Optional<Claims> getTokenClaims(String tokenValue, JwtTokenType tokenType) {
         Key tokenKey = getKeyOf(tokenType);
-        Claims claims = null;
         try {
-            claims = Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                 .setSigningKey(tokenKey)
                 .build()
                 .parseClaimsJws(tokenValue)
                 .getBody();
-        } catch (SecurityException e) {
-            log.info("Invalid JWT Signature.");
-        } catch (MalformedJwtException e) {
-            log.info("Invalid JWT Token.");
-        } catch (ExpiredJwtException e) {
-            log.info("Expired JWT Token.");
-        } catch (UnsupportedJwtException e) {
-            log.info("Unsupported Jwt Token.");
-        } catch (IllegalArgumentException e) {
-            log.info("JWT token compact of handler are invalid.");
+            return Optional.of(claims);
+        } catch (Exception e) {
+            return Optional.empty();
         }
-        return Optional.ofNullable(claims);
+    }
+
+    @Override
+    public boolean validateToken(String tokenValue, JwtTokenType tokenType) {
+        return getTokenClaims(tokenValue, tokenType).isPresent();
     }
 
     public Collection<? extends SimpleGrantedAuthority> getAuthorities(Claims claims) {

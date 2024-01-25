@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -31,10 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         @NonNull HttpServletResponse response,
         @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        String tokenValue = BearerTokenParser.from(request).getToken();
-
         Authentication authentication;
         try {
+            String tokenValue = BearerTokenParser.from(request).getToken()
+                .orElseThrow(() -> new BadCredentialsException("토큰이 존재하지 않습니다."));
             authentication = jwtAuthenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(tokenValue, null)
             );

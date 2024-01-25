@@ -33,7 +33,7 @@ public class JwtToken extends BaseEntity {
     @NotNull
     private LocalDateTime expiresAt;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @NotNull
     private User user;

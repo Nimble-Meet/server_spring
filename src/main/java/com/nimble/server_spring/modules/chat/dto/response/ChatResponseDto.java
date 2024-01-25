@@ -9,16 +9,32 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class ChatResponseDto {
 
+    private Long chatId;
+    private Long memberId;
+    private String email;
     private LocalDateTime createdAt;
     private ChatType chatType;
-    private String email;
-    private Long memberId;
     private String message;
+
+    @Builder
+    public ChatResponseDto(
+        Long chatId,
+        Long memberId,
+        String email,
+        LocalDateTime createdAt,
+        ChatType chatType,
+        String message
+    ) {
+        this.chatId = chatId;
+        this.memberId = memberId;
+        this.email = email;
+        this.createdAt = createdAt;
+        this.chatType = chatType;
+        this.message = message;
+    }
 
     public static ChatResponseDto fromChat(Chat chat) {
         return ChatResponseDto.builder()

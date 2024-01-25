@@ -40,15 +40,12 @@ public class MeetService {
     }
 
     public MeetMember invite(
-        User currentUser, Long meetId,
+        User currentUser,
+        Long meetId,
         MeetInviteRequestDto meetInviteRequestDto
     ) {
-        Meet meet = meetRepository.findById(meetId)
+        Meet meet = meetRepository.findDistinctByIdAndHost_Id(meetId, currentUser.getId())
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
-
-        if (!meet.isHost(currentUser.getId())) {
-            throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
-        }
 
         if (meet.getMeetMembers().size() >= INVITE_LIMIT_NUMBER) {
             throw new ErrorCodeException(ErrorCode.MEET_INVITE_LIMIT_OVER);
@@ -75,12 +72,8 @@ public class MeetService {
     }
 
     public MeetMember kickOut(User currentUser, Long meetId, Long memberId) {
-        Meet meet = meetRepository.findById(meetId)
+        Meet meet = meetRepository.findDistinctByIdAndHost_Id(meetId, currentUser.getId())
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
-
-        if (!meet.isHost(currentUser.getId())) {
-            throw new ErrorCodeException(ErrorCode.MEET_NOT_FOUND);
-        }
 
         MeetMember meetMember = meet.findMember(memberId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEMBER_NOT_FOUND));

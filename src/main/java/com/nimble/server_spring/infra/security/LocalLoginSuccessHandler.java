@@ -9,6 +9,8 @@ import com.nimble.server_spring.modules.auth.JwtToken;
 import com.nimble.server_spring.modules.auth.JwtTokenRepository;
 import com.nimble.server_spring.modules.auth.TokenCookieFactory;
 import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
+import com.nimble.server_spring.modules.user.User;
+import com.nimble.server_spring.modules.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -25,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final AuthTokenManager authTokenManager;
-    private final CustomUserDetailsService userDetailsService;
+    private final UserRepository userRepository;
     private final JwtTokenRepository jwtTokenRepository;
     private final ObjectMapper objectMapper;
     private final TokenCookieFactory tokenCookieFactory;
@@ -35,26 +37,30 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(
         HttpServletRequest request, HttpServletResponse response, Authentication authentication
     ) throws IOException {
-        String email = String.valueOf(authentication.getPrincipal());
-        CustomUserDetails userDetails =
-            (CustomUserDetails) userDetailsService.loadUserByUsername(email);
-        String role = userDetails.getRoleType().getCode();
+        Long userId = (Long) authentication.getPrincipal();
+        RoleType roleType = authentication.getAuthorities().stream()
+            .findFirst()
+            .map(authority -> RoleType.of(authority.getAuthority()))
+            .orElseGet(() -> RoleType.GUEST);
 
         AuthToken accessToken = authTokenManager.publishToken(
-            email,
-            role,
+            userId,
+            roleType,
             JwtTokenType.ACCESS
         );
         AuthToken refreshToken = authTokenManager.publishToken(
-            email,
+            userId,
             null,
             JwtTokenType.REFRESH
         );
 
-        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userDetails.getUserId())
+        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
             .map(token -> token.reissue(accessToken, refreshToken))
-            .orElseGet(() -> JwtToken.issue(accessToken, refreshToken, userDetails.getUser()));
-        jwtTokenRepository.save(jwtToken);
+            .orElseGet(() -> {
+                User user = userRepository.getReferenceById(userId);
+                JwtToken newToken = JwtToken.issue(accessToken, refreshToken, user);
+                return jwtTokenRepository.save(newToken);
+            });
 
         response.addCookie(
             tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())

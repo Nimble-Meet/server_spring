@@ -81,10 +81,8 @@ public class AuthController {
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
         String refreshToken = refreshTokenCookie.getValue();
 
-        String accessToken = BearerTokenParser.from(request).getToken();
-        if (accessToken == null) {
-            throw new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST);
-        }
+        String accessToken = BearerTokenParser.from(request).getToken()
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST));
 
         JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);
 

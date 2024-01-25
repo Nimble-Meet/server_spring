@@ -47,6 +47,7 @@ public enum ErrorCode {
     // 404 NOT_FOUND
     MEET_NOT_FOUND(MEET, NOT_FOUND, "미팅을 찾을 수 없습니다."),
     MEMBER_NOT_FOUND(MEET, NOT_FOUND, "미팅 멤버를 찾을 수 없습니다."),
+    NOT_MEET_MEMBER(MEET, NOT_FOUND, "미팅 멤버가 아닙니다."),
 
     // 409 CONFLICT
     MEET_INVITE_LIMIT_OVER(MEET, CONFLICT, "초대 가능한 인원을 초과했습니다."),

@@ -22,10 +22,13 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
         QMeetMember meetMember = QMeetMember.meetMember;
         QUser member = new QUser("member");
 
-        List<Meet> meetList = jpaQueryFactory.selectFrom(meet)
+        return jpaQueryFactory.selectFrom(meet)
             .leftJoin(meet.host, host)
+            .fetchJoin()
             .leftJoin(meet.meetMembers, meetMember)
+            .fetchJoin()
             .leftJoin(meetMember.user, member)
+            .fetchJoin()
 
             .where(meet.id.in(
                     JPAExpressions
@@ -38,7 +41,6 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
                 )
             )
             .fetch();
-        return meetList;
     }
 
     @Override
@@ -50,8 +52,11 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
 
         Meet fetchedMeet = jpaQueryFactory.selectFrom(meet)
             .leftJoin(meet.host, host)
+            .fetchJoin()
             .leftJoin(meet.meetMembers, meetMember)
+            .fetchJoin()
             .leftJoin(meetMember.user, member)
+            .fetchJoin()
             .where(meet.id.eq(meetId)
                 .and(host.id.eq(userId)
                     .or(member.id.eq(userId))
