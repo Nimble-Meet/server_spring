@@ -13,5 +13,7 @@ public interface AuthTokenManager {
 
     Optional<Claims> getTokenClaims(String tokenValue, JwtTokenType tokenType);
 
+    boolean validateToken(String tokenValue, JwtTokenType tokenType);
+
     Collection<? extends SimpleGrantedAuthority> getAuthorities(Claims claims);
 }

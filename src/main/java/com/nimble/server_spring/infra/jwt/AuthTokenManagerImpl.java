@@ -74,25 +74,21 @@ public class AuthTokenManagerImpl implements AuthTokenManager {
 
     public Optional<Claims> getTokenClaims(String tokenValue, JwtTokenType tokenType) {
         Key tokenKey = getKeyOf(tokenType);
-        Claims claims = null;
         try {
-            claims = Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                 .setSigningKey(tokenKey)
                 .build()
                 .parseClaimsJws(tokenValue)
                 .getBody();
-        } catch (SecurityException e) {
-            log.info("Invalid JWT Signature.");
-        } catch (MalformedJwtException e) {
-            log.info("Invalid JWT Token.");
-        } catch (ExpiredJwtException e) {
-            log.info("Expired JWT Token.");
-        } catch (UnsupportedJwtException e) {
-            log.info("Unsupported Jwt Token.");
-        } catch (IllegalArgumentException e) {
-            log.info("JWT token compact of handler are invalid.");
+            return Optional.of(claims);
+        } catch (Exception e) {
+            return Optional.empty();
         }
-        return Optional.ofNullable(claims);
+    }
+
+    @Override
+    public boolean validateToken(String tokenValue, JwtTokenType tokenType) {
+        return getTokenClaims(tokenValue, tokenType).isPresent();
     }
 
     public Collection<? extends SimpleGrantedAuthority> getAuthorities(Claims claims) {

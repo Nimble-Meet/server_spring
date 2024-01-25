@@ -27,7 +27,6 @@ public class AuthService {
     private final AuthTokenManager authTokenManager;
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional
     public User signup(LocalSignupRequestDto localSignupDto) {
         boolean isEmailAlreadyExists = userRepository.existsByEmail(
             localSignupDto.getEmail()
@@ -56,8 +55,7 @@ public class AuthService {
             throw new ErrorCodeException(ErrorCode.INCONSISTENT_ACCESS_TOKEN);
         }
         boolean isRefreshTokenValid = authTokenManager
-            .getTokenClaims(prevRefreshToken, JwtTokenType.REFRESH)
-            .isPresent();
+            .validateToken(prevRefreshToken, JwtTokenType.REFRESH);
         if (!isRefreshTokenValid) {
             throw new ErrorCodeException(ErrorCode.EXPIRED_REFRESH_TOKEN);
         }
