@@ -9,7 +9,6 @@ import com.nimble.server_spring.modules.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
@@ -29,17 +28,17 @@ public class MeetService {
             .host(user)
             .build();
 
-        MeetMember meetMember = MeetMember.builder()
+        MeetUser meetUser = MeetUser.builder()
             .meet(meet)
             .user(user)
-            .memberRole(MemberRole.HOST)
+            .meetUserRole(MeetUserRole.HOST)
             .build();
-        meet.addMeetMember(meetMember);
+        meet.addMeetUser(meetUser);
 
         return meetRepository.save(meet);
     }
 
-    public MeetMember invite(
+    public MeetUser invite(
         User currentUser,
         Long meetId,
         MeetInviteRequestDto meetInviteRequestDto
@@ -47,7 +46,7 @@ public class MeetService {
         Meet meet = meetRepository.findDistinctByIdAndHost_Id(meetId, currentUser.getId())
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
-        if (meet.getMeetMembers().size() >= INVITE_LIMIT_NUMBER) {
+        if (meet.getMeetUsers().size() >= INVITE_LIMIT_NUMBER) {
             throw new ErrorCodeException(ErrorCode.MEET_INVITE_LIMIT_OVER);
         }
 
@@ -55,30 +54,30 @@ public class MeetService {
         User userToInvite = userRepository.findOneByEmail(email)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
 
-        boolean isUserInvited = meet.getMeetMembers().stream()
-            .anyMatch(meetToMember -> meetToMember.getUser().getEmail().equals(email));
+        boolean isUserInvited = meet.getMeetUsers().stream()
+            .anyMatch(meetUser -> meetUser.getUser().getEmail().equals(email));
         if (isUserInvited) {
             throw new ErrorCodeException(ErrorCode.USER_ALREADY_INVITED);
         }
 
-        MeetMember meetMember = MeetMember.builder()
+        MeetUser meetUser = MeetUser.builder()
             .meet(meet)
             .user(userToInvite)
-            .memberRole(MemberRole.MEMBER)
+            .meetUserRole(MeetUserRole.MEMBER)
             .build();
-        meet.addMeetMember(meetMember);
+        meet.addMeetUser(meetUser);
 
-        return meetMember;
+        return meetUser;
     }
 
-    public MeetMember kickOut(User currentUser, Long meetId, Long memberId) {
+    public MeetUser kickOut(User currentUser, Long meetId, Long meetUserId) {
         Meet meet = meetRepository.findDistinctByIdAndHost_Id(meetId, currentUser.getId())
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
-        MeetMember meetMember = meet.findMember(memberId)
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEMBER_NOT_FOUND));
-        meet.getMeetMembers().remove(meetMember);
+        MeetUser meetUser = meet.findMeetUser(meetUserId)
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));
+        meet.getMeetUsers().remove(meetUser);
 
-        return meetMember;
+        return meetUser;
     }
 }

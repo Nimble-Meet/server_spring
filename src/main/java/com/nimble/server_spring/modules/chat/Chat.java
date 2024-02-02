@@ -2,7 +2,7 @@ package com.nimble.server_spring.modules.chat;
 
 import com.nimble.server_spring.infra.persistence.BaseEntity;
 import com.nimble.server_spring.modules.meet.Meet;
-import com.nimble.server_spring.modules.meet.MeetMember;
+import com.nimble.server_spring.modules.meet.MeetUser;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -34,9 +34,9 @@ public class Chat extends BaseEntity {
     private Meet meet;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "meet_user_id")
     @NotNull
-    private MeetMember meetMember;
+    private MeetUser meetUser;
 
 
     @Builder
@@ -44,11 +44,11 @@ public class Chat extends BaseEntity {
         ChatType chatType,
         String message,
         Meet meet,
-        MeetMember meetMember
+        MeetUser meetUser
     ) {
         this.chatType = chatType;
         this.message = message;
         this.meet = meet;
-        this.meetMember = meetMember;
+        this.meetUser = meetUser;
     }
 }

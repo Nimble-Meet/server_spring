@@ -16,8 +16,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-@ToString(of = {"id", "memberRole", "isEntered"})
-public class MeetMember {
+@ToString(of = {"id", "meetUserRole", "isEntered"})
+public class MeetUser {
 
     @Id
     @GeneratedValue
@@ -43,17 +43,17 @@ public class MeetMember {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private MemberRole memberRole;
+    private MeetUserRole meetUserRole;
 
     @Convert(converter = BooleanToYNConverter.class)
     @NotNull
     private boolean isEntered = false;
 
     @Builder
-    public MeetMember(Meet meet, User user, MemberRole memberRole) {
+    public MeetUser(Meet meet, User user, MeetUserRole meetUserRole) {
         this.meet = meet;
         this.user = user;
-        this.memberRole = memberRole;
+        this.meetUserRole = meetUserRole;
     }
 
     public void enterMeet() {

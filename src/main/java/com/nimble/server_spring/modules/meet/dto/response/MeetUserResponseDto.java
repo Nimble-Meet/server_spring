@@ -1,7 +1,6 @@
 package com.nimble.server_spring.modules.meet.dto.response;
 
-import com.nimble.server_spring.modules.meet.MeetMember;
-import com.nimble.server_spring.modules.meet.MemberRole;
+import com.nimble.server_spring.modules.meet.MeetUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MemberResponseDto {
+public class MeetUserResponseDto {
 
     @Schema(example = "1", description = "미팅 멤버 ID")
     private Long id;
@@ -26,12 +25,12 @@ public class MemberResponseDto {
     @Schema(example = "MEMBER", description = "미팅 멤버의 권한")
     private String role;
 
-    public static MemberResponseDto fromMeetMember(MeetMember meetMember) {
-        return MemberResponseDto.builder()
-                .id(meetMember.getId())
-                .email(meetMember.getUser().getEmail())
-                .nickname(meetMember.getUser().getNickname())
-                .role(meetMember.getMemberRole().name())
-                .build();
+    public static MeetUserResponseDto fromMeetUser(MeetUser meetUser) {
+        return MeetUserResponseDto.builder()
+            .id(meetUser.getId())
+            .email(meetUser.getUser().getEmail())
+            .nickname(meetUser.getUser().getNickname())
+            .role(meetUser.getMeetUserRole().name())
+            .build();
     }
 }

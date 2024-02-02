@@ -10,13 +10,11 @@ import com.nimble.server_spring.infra.error.TypeMismatchReason;
 import com.nimble.server_spring.infra.error.ErrorResponse;
 import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequestDto;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
-import com.nimble.server_spring.modules.meet.MeetMember;
-import com.nimble.server_spring.modules.meet.MeetMemberRepository;
+import com.nimble.server_spring.modules.meet.MeetUser;
+import com.nimble.server_spring.modules.meet.MeetUserRepository;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
-import jakarta.annotation.Nullable;
 import java.security.Principal;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -45,9 +43,10 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Transactional
 public class ChatController {
 
+    public static final String MEET_USER_ID_KEY = "meetUserId";
     private final SimpMessageSendingOperations template;
     private final ChatRepository chatRepository;
-    private final MeetMemberRepository meetMemberRepository;
+    private final MeetUserRepository meetUserRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
@@ -61,21 +60,21 @@ public class ChatController {
             .flatMap(userRepository::findOneByEmail)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
-        MeetMember meetMember = meetMemberRepository
+        MeetUser meetUser = meetUserRepository
             .findByUserIdAndMeetId(user.getId(), meetId)
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND));
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));
 
-        meetMember.enterMeet();
+        meetUser.enterMeet();
 
         Chat chat = Chat.builder()
             .chatType(ChatType.ENTER)
-            .meet(meetMember.getMeet())
-            .meetMember(meetMember)
+            .meet(meetUser.getMeet())
+            .meetUser(meetUser)
             .build();
         chatRepository.save(chat);
 
         Optional.ofNullable(headerAccessor.getSessionAttributes())
-            .ifPresent(attributes -> attributes.put("memberId", meetMember.getId()));
+            .ifPresent(attributes -> attributes.put(MEET_USER_ID_KEY, meetUser.getId()));
         template.convertAndSend(
             "/subscribe/chat/meet/" + meetId,
             ChatResponseDto.fromChat(chat)
@@ -93,15 +92,15 @@ public class ChatController {
             .flatMap(userRepository::findOneByEmail)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
-        MeetMember meetMember = meetMemberRepository
+        MeetUser meetUser = meetUserRepository
             .findByUserIdAndMeetId(user.getId(), meetId)
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_MEMBER_NOT_FOUND));
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));
 
         Chat chat = Chat.builder()
             .chatType(ChatType.TALK)
             .message(chatTalkRequestDto.getMessage())
-            .meet(meetMember.getMeet())
-            .meetMember(meetMember)
+            .meet(meetUser.getMeet())
+            .meetUser(meetUser)
             .build();
         chatRepository.save(chat);
 
@@ -117,27 +116,27 @@ public class ChatController {
         String email = Optional.ofNullable(headerAccessor.getUser())
             .map(Principal::getName)
             .orElse(null);
-        MeetMember meetMember = Optional.ofNullable(headerAccessor.getSessionAttributes())
-            .map(attributes -> attributes.get("memberId"))
+        MeetUser meetUser = Optional.ofNullable(headerAccessor.getSessionAttributes())
+            .map(attributes -> attributes.get(MEET_USER_ID_KEY))
             .map(Object::toString)
             .map(Long::parseLong)
-            .flatMap(meetMemberRepository::findById)
+            .flatMap(meetUserRepository::findById)
             .orElse(null);
-        if (Objects.isNull(email) || Objects.isNull(meetMember)) {
+        if (Objects.isNull(email) || Objects.isNull(meetUser)) {
             return;
         }
 
-        meetMember.leaveMeet();
+        meetUser.leaveMeet();
 
         Chat chat = Chat.builder()
             .chatType(ChatType.LEAVE)
-            .meet(meetMember.getMeet())
-            .meetMember(meetMember)
+            .meet(meetUser.getMeet())
+            .meetUser(meetUser)
             .build();
         chatRepository.save(chat);
 
         template.convertAndSend(
-            "/subscribe/chat/meet/" + meetMember.getMeet().getId(),
+            "/subscribe/chat/meet/" + meetUser.getMeet().getId(),
             ChatResponseDto.fromChat(chat)
         );
     }

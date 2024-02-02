@@ -19,15 +19,15 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
     public List<Meet> findHostedOrInvitedMeetsByUserId(Long userId) {
         QMeet meet = QMeet.meet;
         QUser host = QUser.user;
-        QMeetMember meetMember = QMeetMember.meetMember;
+        QMeetUser meetUser = QMeetUser.meetUser;
         QUser member = new QUser("member");
 
         return jpaQueryFactory.selectFrom(meet)
             .leftJoin(meet.host, host)
             .fetchJoin()
-            .leftJoin(meet.meetMembers, meetMember)
+            .leftJoin(meet.meetUsers, meetUser)
             .fetchJoin()
-            .leftJoin(meetMember.user, member)
+            .leftJoin(meetUser.user, member)
             .fetchJoin()
 
             .where(meet.id.in(
@@ -47,15 +47,15 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
     public Optional<Meet> findMeetByIdIfHostedOrInvited(Long meetId, Long userId) {
         QMeet meet = QMeet.meet;
         QUser host = QUser.user;
-        QMeetMember meetMember = QMeetMember.meetMember;
+        QMeetUser meetUser = QMeetUser.meetUser;
         QUser member = new QUser("member");
 
         Meet fetchedMeet = jpaQueryFactory.selectFrom(meet)
             .leftJoin(meet.host, host)
             .fetchJoin()
-            .leftJoin(meet.meetMembers, meetMember)
+            .leftJoin(meet.meetUsers, meetUser)
             .fetchJoin()
-            .leftJoin(meetMember.user, member)
+            .leftJoin(meetUser.user, member)
             .fetchJoin()
             .where(meet.id.eq(meetId)
                 .and(host.id.eq(userId)

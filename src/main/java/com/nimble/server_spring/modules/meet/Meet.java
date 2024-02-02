@@ -39,7 +39,7 @@ public class Meet extends BaseEntity {
 
     @OneToMany(mappedBy = "meet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @NotNull
-    private List<MeetMember> meetMembers = new ArrayList<>();
+    private List<MeetUser> meetUsers = new ArrayList<>();
 
     @Builder
     public Meet(String meetName, String description, User host) {
@@ -52,13 +52,13 @@ public class Meet extends BaseEntity {
         return this.host.getId().equals(user.getId());
     }
 
-    public Optional<MeetMember> findMember(Long memberId) {
-        return this.meetMembers.stream()
-            .filter(meetMember -> meetMember.getId().equals(memberId))
+    public Optional<MeetUser> findMeetUser(Long meetUserId) {
+        return this.meetUsers.stream()
+            .filter(meetUser -> meetUser.getId().equals(meetUserId))
             .findFirst();
     }
 
-    public void addMeetMember(MeetMember meetMember) {
-        this.meetMembers.add(meetMember);
+    public void addMeetUser(MeetUser meetUser) {
+        this.meetUsers.add(meetUser);
     }
 }

@@ -1,7 +1,6 @@
 package com.nimble.server_spring.infra.error;
 
 import static com.nimble.server_spring.infra.error.DomainType.AUTH;
-import static com.nimble.server_spring.infra.error.DomainType.CHAT;
 import static com.nimble.server_spring.infra.error.DomainType.GLOBAL;
 import static com.nimble.server_spring.infra.error.DomainType.MEET;
 import static com.nimble.server_spring.infra.error.DomainType.USER;
@@ -46,8 +45,8 @@ public enum ErrorCode {
 
     // 404 NOT_FOUND
     MEET_NOT_FOUND(MEET, NOT_FOUND, "미팅을 찾을 수 없습니다."),
-    MEMBER_NOT_FOUND(MEET, NOT_FOUND, "미팅 멤버를 찾을 수 없습니다."),
-    NOT_MEET_MEMBER(MEET, NOT_FOUND, "미팅 멤버가 아닙니다."),
+    MEET_USER_NOT_FOUND(MEET, NOT_FOUND, "미팅 멤버를 찾을 수 없습니다."),
+    NOT_MEET_USER(MEET, NOT_FOUND, "미팅 멤버가 아닙니다."),
 
     // 409 CONFLICT
     MEET_INVITE_LIMIT_OVER(MEET, CONFLICT, "초대 가능한 인원을 초과했습니다."),
@@ -62,13 +61,6 @@ public enum ErrorCode {
 
     // 404 NOT_FOUND
     USER_NOT_FOUND_BY_EMAIL(USER, NOT_FOUND, "이메일에 해당하는 사용자가 존재하지 않습니다."),
-
-    // ==============================================================
-    // CHAT ERROR CODE
-    // ==============================================================
-
-    // 404 NOT_FOUND
-    MEET_MEMBER_NOT_FOUND(CHAT, NOT_FOUND, "미팅 멤버를 찾을 수 없습니다."),
 
     // ==============================================================
     // GLOBAL
