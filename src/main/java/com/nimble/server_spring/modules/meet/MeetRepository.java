@@ -8,6 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface MeetRepository extends JpaRepository<Meet, Long>, MeetRepositoryExtension {
 
-    @EntityGraph(attributePaths = {"host", "meetUsers", "meetUsers.user"})
-    Optional<Meet> findDistinctByIdAndHost_Id(Long id, Long hostId);
+    @EntityGraph(attributePaths = {"meetUsers", "meetUsers.user"})
+    Optional<Meet> findMeetById(Long id);
 }

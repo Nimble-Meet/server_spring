@@ -6,6 +6,7 @@ import static com.nimble.server_spring.infra.error.DomainType.MEET;
 import static com.nimble.server_spring.infra.error.DomainType.USER;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -45,8 +46,9 @@ public enum ErrorCode {
 
     // 404 NOT_FOUND
     MEET_NOT_FOUND(MEET, NOT_FOUND, "미팅을 찾을 수 없습니다."),
-    MEET_USER_NOT_FOUND(MEET, NOT_FOUND, "미팅 멤버를 찾을 수 없습니다."),
-    NOT_MEET_USER(MEET, NOT_FOUND, "미팅 멤버가 아닙니다."),
+    MEET_USER_NOT_FOUND(MEET, NOT_FOUND, "미팅 참여자를 찾을 수 없습니다."),
+    NOT_MEET_USER_FORBIDDEN(MEET, FORBIDDEN, "미팅 참여자가 아니므로 요청이 불가능합니다."),
+    NOT_MEET_HOST_FORBIDDEN(MEET, FORBIDDEN, "미팅 호스트가 아니므로 요청이 불가능합니다."),
 
     // 409 CONFLICT
     MEET_INVITE_LIMIT_OVER(MEET, CONFLICT, "초대 가능한 인원을 초과했습니다."),

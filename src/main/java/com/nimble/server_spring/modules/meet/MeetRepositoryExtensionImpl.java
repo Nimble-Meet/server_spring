@@ -16,53 +16,24 @@ public class MeetRepositoryExtensionImpl implements MeetRepositoryExtension {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Meet> findHostedOrInvitedMeetsByUserId(Long userId) {
+    public List<Meet> findParticipatedMeets(Long userId) {
         QMeet meet = QMeet.meet;
-        QUser host = QUser.user;
+        QUser user = QUser.user;
         QMeetUser meetUser = QMeetUser.meetUser;
-        QUser member = new QUser("member");
 
         return jpaQueryFactory.selectFrom(meet)
-            .leftJoin(meet.host, host)
+            .join(meet.meetUsers, meetUser)
             .fetchJoin()
-            .leftJoin(meet.meetUsers, meetUser)
+            .join(meetUser.user, user)
             .fetchJoin()
-            .leftJoin(meetUser.user, member)
-            .fetchJoin()
-
             .where(meet.id.in(
-                    JPAExpressions
-                        .select(meet.id)
+                    JPAExpressions.selectDistinct(meet.id)
                         .from(meet)
-                        .where(
-                            meet.host.id.eq(userId)
-                                .or(member.id.eq(userId))
-                        )
+                        .join(meet.meetUsers, meetUser)
+                        .join(meetUser.user, user)
+                        .where(user.id.eq(userId))
                 )
             )
             .fetch();
-    }
-
-    @Override
-    public Optional<Meet> findMeetByIdIfHostedOrInvited(Long meetId, Long userId) {
-        QMeet meet = QMeet.meet;
-        QUser host = QUser.user;
-        QMeetUser meetUser = QMeetUser.meetUser;
-        QUser member = new QUser("member");
-
-        Meet fetchedMeet = jpaQueryFactory.selectFrom(meet)
-            .leftJoin(meet.host, host)
-            .fetchJoin()
-            .leftJoin(meet.meetUsers, meetUser)
-            .fetchJoin()
-            .leftJoin(meetUser.user, member)
-            .fetchJoin()
-            .where(meet.id.eq(meetId)
-                .and(host.id.eq(userId)
-                    .or(member.id.eq(userId))
-                )
-            )
-            .fetchOne();
-        return Optional.ofNullable(fetchedMeet);
     }
 }

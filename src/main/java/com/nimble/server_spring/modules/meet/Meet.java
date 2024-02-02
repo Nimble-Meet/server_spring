@@ -32,24 +32,27 @@ public class Meet extends BaseEntity {
     @Length(max = 48)
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "host_id")
-    @NotNull
-    private User host;
-
     @OneToMany(mappedBy = "meet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @NotNull
     private List<MeetUser> meetUsers = new ArrayList<>();
 
     @Builder
-    public Meet(String meetName, String description, User host) {
+    public Meet(String meetName, String description) {
         this.meetName = meetName;
         this.description = description;
-        this.host = host;
     }
 
-    public boolean isHost(User user) {
-        return this.host.getId().equals(user.getId());
+    public boolean isHostedBy(User user) {
+        return this.meetUsers.stream()
+            .filter(meetUser -> meetUser.getUser().getId().equals(user.getId()))
+            .findFirst()
+            .map(MeetUser::isHost)
+            .orElse(false);
+    }
+
+    public boolean isParticipatedBy(User user) {
+        return this.meetUsers.stream()
+            .anyMatch(meetUser -> meetUser.getUser().getId().equals(user.getId()));
     }
 
     public Optional<MeetUser> findMeetUser(Long meetUserId) {

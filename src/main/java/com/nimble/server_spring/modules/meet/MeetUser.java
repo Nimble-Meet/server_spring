@@ -56,6 +56,10 @@ public class MeetUser {
         this.meetUserRole = meetUserRole;
     }
 
+    public boolean isHost() {
+        return this.meetUserRole == MeetUserRole.HOST;
+    }
+
     public void enterMeet() {
         this.isEntered = true;
     }

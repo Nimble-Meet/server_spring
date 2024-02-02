@@ -25,7 +25,6 @@ public class MeetService {
         Meet meet = Meet.builder()
             .meetName(meetCreateRequestDto.getMeetName())
             .description(meetCreateRequestDto.getDescription())
-            .host(user)
             .build();
 
         MeetUser meetUser = MeetUser.builder()
@@ -43,8 +42,12 @@ public class MeetService {
         Long meetId,
         MeetInviteRequestDto meetInviteRequestDto
     ) {
-        Meet meet = meetRepository.findDistinctByIdAndHost_Id(meetId, currentUser.getId())
+        Meet meet = meetRepository.findMeetById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
+
+        if (!meet.isHostedBy(currentUser)) {
+            throw new ErrorCodeException(ErrorCode.NOT_MEET_HOST_FORBIDDEN);
+        }
 
         if (meet.getMeetUsers().size() >= INVITE_LIMIT_NUMBER) {
             throw new ErrorCodeException(ErrorCode.MEET_INVITE_LIMIT_OVER);
@@ -71,8 +74,12 @@ public class MeetService {
     }
 
     public MeetUser kickOut(User currentUser, Long meetId, Long meetUserId) {
-        Meet meet = meetRepository.findDistinctByIdAndHost_Id(meetId, currentUser.getId())
+        Meet meet = meetRepository.findMeetById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
+
+        if (!meet.isHostedBy(currentUser)) {
+            throw new ErrorCodeException(ErrorCode.NOT_MEET_HOST_FORBIDDEN);
+        }
 
         MeetUser meetUser = meet.findMeetUser(meetUserId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));

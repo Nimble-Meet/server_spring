@@ -29,9 +29,6 @@ public class MeetResponseDto {
     @Schema(example = "2023-01-01T00:00:00", description = "미팅 생성 시간")
     private LocalDateTime createdAt;
 
-    @Schema(description = "미팅 생성 유저 정보")
-    private SimpleUserResponseDto host;
-
     @Schema(description = "미팅 멤버 정보의 목록")
     private List<MeetUserResponseDto> meetUsers;
 
@@ -41,7 +38,6 @@ public class MeetResponseDto {
             .meetName(meet.getMeetName())
             .description(meet.getDescription())
             .createdAt(meet.getCreatedAt())
-            .host(SimpleUserResponseDto.fromUser(meet.getHost()))
             .meetUsers(meet.getMeetUsers().stream()
                 .map(MeetUserResponseDto::fromMeetUser)
                 .toList()
