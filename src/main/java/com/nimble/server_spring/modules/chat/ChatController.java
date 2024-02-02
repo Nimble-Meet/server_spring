@@ -14,6 +14,7 @@ import com.nimble.server_spring.modules.meet.MeetUser;
 import com.nimble.server_spring.modules.meet.MeetUserRepository;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
+import com.nimble.server_spring.modules.user.UserService;
 import java.security.Principal;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,6 +49,7 @@ public class ChatController {
     private final ChatRepository chatRepository;
     private final MeetUserRepository meetUserRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
     private final ObjectMapper objectMapper;
 
     @MessageMapping("/meet/{meetId}/chat/enter")
@@ -56,8 +58,7 @@ public class ChatController {
         SimpMessageHeaderAccessor headerAccessor
     ) {
         User user = Optional.ofNullable(headerAccessor.getUser())
-            .map(Principal::getName)
-            .flatMap(userRepository::findOneByEmail)
+            .map(userService::getUserByPrincipalLazy)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
         MeetUser meetUser = meetUserRepository
@@ -88,8 +89,7 @@ public class ChatController {
         SimpMessageHeaderAccessor headerAccessor
     ) {
         User user = Optional.ofNullable(headerAccessor.getUser())
-            .map(Principal::getName)
-            .flatMap(userRepository::findOneByEmail)
+            .map(userService::getUserByPrincipalLazy)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
         MeetUser meetUser = meetUserRepository
