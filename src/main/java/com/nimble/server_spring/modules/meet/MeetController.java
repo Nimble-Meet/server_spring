@@ -10,7 +10,7 @@ import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
 import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequestDto;
 import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequestDto;
 import com.nimble.server_spring.modules.meet.dto.response.MeetResponseDto;
-import com.nimble.server_spring.modules.meet.dto.response.MemberResponseDto;
+import com.nimble.server_spring.modules.meet.dto.response.MeetUserResponseDto;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +40,7 @@ public class MeetController {
     private final UserService userService;
     private final MeetService meetService;
     private final MeetRepository meetRepository;
-    private final MeetMemberRepository meetMemberRepository;
+    private final MeetUserRepository meetUserRepository;
     private final ChatRepository chatRepository;
 
     @GetMapping
@@ -48,7 +48,7 @@ public class MeetController {
     public ResponseEntity<List<MeetResponseDto>> getMeets(Principal principal) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        List<Meet> meetList = meetRepository.findHostedOrInvitedMeetsByUserId(currentUser.getId());
+        List<Meet> meetList = meetRepository.findParticipatedMeets(currentUser.getId());
         List<MeetResponseDto> meetResponseDtoList = meetList.stream()
             .map(MeetResponseDto::fromMeet)
             .toList();
@@ -77,7 +77,8 @@ public class MeetController {
     @GetMapping("/{meetId}")
     @Operation(summary = "미팅 조회", description = "특정 미팅을 조회합니다.")
     @ApiErrorCodes({
-        ErrorCode.MEET_NOT_FOUND
+        ErrorCode.MEET_NOT_FOUND,
+        ErrorCode.NOT_MEET_USER_FORBIDDEN
     })
     public ResponseEntity<MeetResponseDto> getMeet(
         @PathVariable @Parameter(description = "조회할 미팅의 ID", required = true)
@@ -86,8 +87,12 @@ public class MeetController {
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        Meet meet = meetRepository.findMeetByIdIfHostedOrInvited(meetId, currentUser.getId())
+        Meet meet = meetRepository.findMeetById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
+
+        if (!meet.isParticipatedBy(currentUser)) {
+            throw new ErrorCodeException(ErrorCode.NOT_MEET_USER_FORBIDDEN);
+        }
 
         return new ResponseEntity<>(
             MeetResponseDto.fromMeet(meet),
@@ -98,9 +103,13 @@ public class MeetController {
     @PostMapping("/{meetId}/member")
     @Operation(summary = "멤버 초대", description = "email에 해당하는 사용자를 특정 미팅에 초대합니다.")
     @ApiErrorCodes({
-        ErrorCode.MEET_NOT_FOUND
+        ErrorCode.MEET_NOT_FOUND,
+        ErrorCode.NOT_MEET_HOST_FORBIDDEN,
+        ErrorCode.MEET_INVITE_LIMIT_OVER,
+        ErrorCode.USER_NOT_FOUND_BY_EMAIL,
+        ErrorCode.USER_ALREADY_INVITED
     })
-    public ResponseEntity<MemberResponseDto> invite(
+    public ResponseEntity<MeetUserResponseDto> invite(
         @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
         Long meetId,
         @RequestBody @Validated @Parameter(description = "초대할 멤버의 정보", required = true)
@@ -109,40 +118,42 @@ public class MeetController {
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        MeetMember meetMember = meetService.invite(
+        MeetUser meetUser = meetService.invite(
             currentUser,
             meetId,
             meetInviteRequestDto
         );
 
         return new ResponseEntity<>(
-            MemberResponseDto.fromMeetMember(meetMember),
+            MeetUserResponseDto.fromMeetUser(meetUser),
             HttpStatus.OK
         );
     }
 
-    @DeleteMapping("/{meetId}/member/{memberId}")
+    @DeleteMapping("/{meetId}/member/{meetUserId}")
     @Operation(summary = "멤버 강퇴", description = "특정 미팅에서 멤버를 강퇴합니다.")
     @ApiErrorCodes({
-        ErrorCode.MEET_NOT_FOUND
+        ErrorCode.MEET_NOT_FOUND,
+        ErrorCode.NOT_MEET_HOST_FORBIDDEN,
+        ErrorCode.MEET_USER_NOT_FOUND
     })
-    public ResponseEntity<MemberResponseDto> kickOut(
+    public ResponseEntity<MeetUserResponseDto> kickOut(
         @PathVariable @Parameter(description = "멤버를 강퇴할 미팅의 ID", required = true)
         Long meetId,
         @PathVariable @Parameter(description = "강퇴할 멤버의 ID", required = true)
-        Long memberId,
+        Long meetUserId,
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        MeetMember meetMember = meetService.kickOut(
+        MeetUser meetUser = meetService.kickOut(
             currentUser,
             meetId,
-            memberId
+            meetUserId
         );
 
         return new ResponseEntity<>(
-            MemberResponseDto.fromMeetMember(meetMember),
+            MeetUserResponseDto.fromMeetUser(meetUser),
             HttpStatus.OK
         );
     }
@@ -150,7 +161,7 @@ public class MeetController {
     @GetMapping("/{meetId}/chat")
     @Operation(summary = "채팅 목록 조회", description = "특정 미팅의 채팅 목록을 조회합니다.")
     @ApiErrorCodes({
-        ErrorCode.NOT_MEET_MEMBER
+        ErrorCode.NOT_MEET_USER_FORBIDDEN
     })
     public ResponseEntity<Slice<ChatResponseDto>> getChats(
         @PathVariable @Parameter(description = "채팅 목록을 조회할 미팅의 ID", required = true)
@@ -162,11 +173,11 @@ public class MeetController {
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
-        if (!meetMemberRepository.existsByUser_IdAndMeet_Id(
+        if (!meetUserRepository.existsByUser_IdAndMeet_Id(
             currentUser.getId(),
             meetId
         )) {
-            throw new ErrorCodeException(ErrorCode.NOT_MEET_MEMBER);
+            throw new ErrorCodeException(ErrorCode.NOT_MEET_USER_FORBIDDEN);
         }
 
         Slice<ChatResponseDto> chatResponsDtoSlice = chatRepository.findAllByMeetId(

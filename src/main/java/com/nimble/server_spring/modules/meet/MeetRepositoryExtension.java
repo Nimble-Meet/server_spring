@@ -5,7 +5,6 @@ import java.util.Optional;
 
 public interface MeetRepositoryExtension {
 
-    public List<Meet> findHostedOrInvitedMeetsByUserId(Long userId);
+    public List<Meet> findParticipatedMeets(Long userId);
 
-    public Optional<Meet> findMeetByIdIfHostedOrInvited(Long meetId, Long userId);
 }

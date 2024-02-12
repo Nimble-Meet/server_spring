@@ -3,7 +3,6 @@ package com.nimble.server_spring.modules.chat.dto.response;
 import com.nimble.server_spring.modules.chat.Chat;
 import com.nimble.server_spring.modules.chat.ChatType;
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class ChatResponseDto {
 
     private Long chatId;
-    private Long memberId;
+    private Long meetUserId;
     private String email;
     private LocalDateTime createdAt;
     private ChatType chatType;
@@ -22,14 +21,14 @@ public class ChatResponseDto {
     @Builder
     public ChatResponseDto(
         Long chatId,
-        Long memberId,
+        Long meetUserId,
         String email,
         LocalDateTime createdAt,
         ChatType chatType,
         String message
     ) {
         this.chatId = chatId;
-        this.memberId = memberId;
+        this.meetUserId = meetUserId;
         this.email = email;
         this.createdAt = createdAt;
         this.chatType = chatType;
@@ -40,8 +39,8 @@ public class ChatResponseDto {
         return ChatResponseDto.builder()
             .createdAt(chat.getCreatedAt())
             .chatType(chat.getChatType())
-            .email(chat.getMeetMember().getUser().getEmail())
-            .memberId(chat.getMeetMember().getId())
+            .email(chat.getMeetUser().getUser().getEmail())
+            .meetUserId(chat.getMeetUser().getId())
             .message(chat.getMessage())
             .build();
     }

@@ -17,35 +17,31 @@ import java.util.List;
 @Builder
 public class MeetResponseDto {
 
-  @Schema(example = "1", description = "미팅 ID")
-  private Long id;
+    @Schema(example = "1", description = "미팅 ID")
+    private Long id;
 
-  @Schema(example = "MyMeet", description = "미팅 이름")
-  private String meetName;
+    @Schema(example = "MyMeet", description = "미팅 이름")
+    private String meetName;
 
-  @Schema(example = "예시 미팅 입니다.", description = "미팅 설명")
-  private String description;
+    @Schema(example = "예시 미팅 입니다.", description = "미팅 설명")
+    private String description;
 
-  @Schema(example = "2023-01-01T00:00:00", description = "미팅 생성 시간")
-  private LocalDateTime createdAt;
+    @Schema(example = "2023-01-01T00:00:00", description = "미팅 생성 시간")
+    private LocalDateTime createdAt;
 
-  @Schema(description = "미팅 생성 유저 정보")
-  private SimpleUserResponseDto host;
+    @Schema(description = "미팅 멤버 정보의 목록")
+    private List<MeetUserResponseDto> meetUsers;
 
-  @Schema(description = "미팅 멤버 정보의 목록")
-  private List<MemberResponseDto> members;
-
-  public static MeetResponseDto fromMeet(Meet meet) {
-    return MeetResponseDto.builder()
-        .id(meet.getId())
-        .meetName(meet.getMeetName())
-        .description(meet.getDescription())
-        .createdAt(meet.getCreatedAt())
-        .host(SimpleUserResponseDto.fromUser(meet.getHost()))
-        .members(meet.getMeetMembers().stream()
-            .map(MemberResponseDto::fromMeetMember)
-            .toList()
-        )
-        .build();
-  }
+    public static MeetResponseDto fromMeet(Meet meet) {
+        return MeetResponseDto.builder()
+            .id(meet.getId())
+            .meetName(meet.getMeetName())
+            .description(meet.getDescription())
+            .createdAt(meet.getCreatedAt())
+            .meetUsers(meet.getMeetUsers().stream()
+                .map(MeetUserResponseDto::fromMeetUser)
+                .toList()
+            )
+            .build();
+    }
 }

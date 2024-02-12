@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-public interface MeetMemberRepository extends JpaRepository<MeetMember, Long> {
+public interface MeetUserRepository extends JpaRepository<MeetUser, Long> {
 
-    Optional<MeetMember> findByUserIdAndMeetId(Long userId, Long meetId);
+    Optional<MeetUser> findByUserIdAndMeetId(Long userId, Long meetId);
 
     boolean existsByUser_IdAndMeet_Id(Long userId, Long meetId);
 }
