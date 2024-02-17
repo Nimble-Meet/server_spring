@@ -7,8 +7,8 @@ import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.modules.chat.ChatRepository;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
-import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequestDto;
-import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequestDto;
+import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequest;
+import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequest;
 import com.nimble.server_spring.modules.meet.dto.response.MeetResponseDto;
 import com.nimble.server_spring.modules.meet.dto.response.MeetUserResponseDto;
 import com.nimble.server_spring.modules.user.User;
@@ -59,14 +59,14 @@ public class MeetController {
     @Operation(summary = "미팅 생성", description = "미팅 생성 정보를 이용해서 미팅을 생성합니다.")
     public ResponseEntity<MeetResponseDto> createMeet(
         @RequestBody @Validated @Parameter(description = "미팅 생성 정보", required = true)
-        MeetCreateRequestDto meetCreateRequestDto,
+        MeetCreateRequest meetCreateRequest,
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipal(principal);
 
         Meet meet = meetService.createMeet(
             currentUser,
-            meetCreateRequestDto
+            meetCreateRequest.toServiceRequest()
         );
         return new ResponseEntity<>(
             MeetResponseDto.fromMeet(meet),
@@ -113,7 +113,7 @@ public class MeetController {
         @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
         Long meetId,
         @RequestBody @Validated @Parameter(description = "초대할 멤버의 정보", required = true)
-        MeetInviteRequestDto meetInviteRequestDto,
+        MeetInviteRequest meetInviteRequest,
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
@@ -121,7 +121,7 @@ public class MeetController {
         MeetUser meetUser = meetService.invite(
             currentUser,
             meetId,
-            meetInviteRequestDto
+            meetInviteRequest.toServiceRequest()
         );
 
         return new ResponseEntity<>(

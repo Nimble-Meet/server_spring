@@ -2,18 +2,24 @@ package com.nimble.server_spring.modules.meet;
 
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequestDto;
-import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequestDto;
+import com.nimble.server_spring.modules.meet.dto.request.MeetCreateServiceRequest;
+import com.nimble.server_spring.modules.meet.dto.request.MeetInviteServiceRequest;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @RequiredArgsConstructor
 @Service
 @Transactional
+@Slf4j
+@Validated
 public class MeetService {
 
     private final MeetRepository meetRepository;
@@ -21,10 +27,10 @@ public class MeetService {
 
     private static final int INVITE_LIMIT_NUMBER = 3;
 
-    public Meet createMeet(User user, MeetCreateRequestDto meetCreateRequestDto) {
+    public Meet createMeet(User user, @Valid MeetCreateServiceRequest meetCreateRequest) {
         Meet meet = Meet.builder()
-            .meetName(meetCreateRequestDto.getMeetName())
-            .description(meetCreateRequestDto.getDescription())
+            .meetName(meetCreateRequest.getMeetName())
+            .description(meetCreateRequest.getDescription())
             .build();
 
         MeetUser meetUser = MeetUser.builder()
@@ -34,13 +40,15 @@ public class MeetService {
             .build();
         meet.addMeetUser(meetUser);
 
+        log.info("Meet created: {}", meet);
+
         return meetRepository.save(meet);
     }
 
     public MeetUser invite(
         User currentUser,
         Long meetId,
-        MeetInviteRequestDto meetInviteRequestDto
+        @Valid MeetInviteServiceRequest meetInviteRequest
     ) {
         Meet meet = meetRepository.findMeetById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
@@ -53,7 +61,7 @@ public class MeetService {
             throw new ErrorCodeException(ErrorCode.MEET_INVITE_LIMIT_OVER);
         }
 
-        String email = meetInviteRequestDto.getEmail();
+        String email = meetInviteRequest.getEmail();
         User userToInvite = userRepository.findOneByEmail(email)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
 
