@@ -1,10 +1,8 @@
 package com.nimble.server_spring.infra.security;
 
-import static org.springframework.http.HttpMethod.POST;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.http.RequestBodyParser;
-import com.nimble.server_spring.modules.auth.dto.request.LocalLoginRequestDto;
+import com.nimble.server_spring.infra.security.dto.request.LocalLoginRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

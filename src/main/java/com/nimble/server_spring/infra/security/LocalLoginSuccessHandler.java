@@ -8,7 +8,7 @@ import com.nimble.server_spring.infra.jwt.JwtTokenType;
 import com.nimble.server_spring.modules.auth.JwtToken;
 import com.nimble.server_spring.modules.auth.JwtTokenRepository;
 import com.nimble.server_spring.modules.auth.TokenCookieFactory;
-import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
+import com.nimble.server_spring.infra.security.dto.response.LoginResponseDto;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
