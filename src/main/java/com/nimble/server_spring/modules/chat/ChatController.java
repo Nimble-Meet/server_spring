@@ -8,12 +8,10 @@ import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.error.NotValidReason;
 import com.nimble.server_spring.infra.error.TypeMismatchReason;
 import com.nimble.server_spring.infra.error.ErrorResponse;
-import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequestDto;
+import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequest;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
-import com.nimble.server_spring.modules.meet.MeetUser;
 import com.nimble.server_spring.modules.meet.MeetUserRepository;
 import com.nimble.server_spring.modules.user.User;
-import com.nimble.server_spring.modules.user.UserRepository;
 import com.nimble.server_spring.modules.user.UserService;
 import java.security.Principal;
 import java.util.Objects;
@@ -48,34 +46,25 @@ public class ChatController {
     private final SimpMessageSendingOperations template;
     private final ChatRepository chatRepository;
     private final MeetUserRepository meetUserRepository;
-    private final UserRepository userRepository;
     private final UserService userService;
     private final ObjectMapper objectMapper;
+    private final ChatService chatService;
 
     @MessageMapping("/meet/{meetId}/chat/enter")
     public void enterUser(
         @DestinationVariable Long meetId,
         SimpMessageHeaderAccessor headerAccessor
     ) {
-        User user = Optional.ofNullable(headerAccessor.getUser())
+        User currentUser = Optional.ofNullable(headerAccessor.getUser())
             .map(userService::getUserByPrincipalLazy)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
-        MeetUser meetUser = meetUserRepository
-            .findByUserIdAndMeetId(user.getId(), meetId)
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));
-
-        meetUser.enterMeet();
-
-        Chat chat = Chat.builder()
-            .chatType(ChatType.ENTER)
-            .meet(meetUser.getMeet())
-            .meetUser(meetUser)
-            .build();
-        chatRepository.save(chat);
+        Chat chat = chatService.enterChat(currentUser, meetId);
 
         Optional.ofNullable(headerAccessor.getSessionAttributes())
-            .ifPresent(attributes -> attributes.put(MEET_USER_ID_KEY, meetUser.getId()));
+            .ifPresent(
+                attributes -> attributes.put(MEET_USER_ID_KEY, chat.getMeetUser().getId())
+            );
         template.convertAndSend(
             "/subscribe/chat/meet/" + meetId,
             ChatResponseDto.fromChat(chat)
@@ -85,24 +74,14 @@ public class ChatController {
     @MessageMapping("/meet/{meetId}/chat/talk")
     public void sendMessage(
         @DestinationVariable Long meetId,
-        @Payload @Validated ChatTalkRequestDto chatTalkRequestDto,
+        @Payload @Validated ChatTalkRequest chatTalkRequest,
         SimpMessageHeaderAccessor headerAccessor
     ) {
-        User user = Optional.ofNullable(headerAccessor.getUser())
+        User currentUser = Optional.ofNullable(headerAccessor.getUser())
             .map(userService::getUserByPrincipalLazy)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
-        MeetUser meetUser = meetUserRepository
-            .findByUserIdAndMeetId(user.getId(), meetId)
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));
-
-        Chat chat = Chat.builder()
-            .chatType(ChatType.TALK)
-            .message(chatTalkRequestDto.getMessage())
-            .meet(meetUser.getMeet())
-            .meetUser(meetUser)
-            .build();
-        chatRepository.save(chat);
+        Chat chat = chatService.talkChat(currentUser, meetId, chatTalkRequest.toServiceRequest());
 
         template.convertAndSend(
             "/subscribe/chat/meet/" + meetId,
@@ -113,30 +92,19 @@ public class ChatController {
     @EventListener
     public void webSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String email = Optional.ofNullable(headerAccessor.getUser())
-            .map(Principal::getName)
-            .orElse(null);
-        MeetUser meetUser = Optional.ofNullable(headerAccessor.getSessionAttributes())
+        Long meetUserId = Optional.ofNullable(headerAccessor.getSessionAttributes())
             .map(attributes -> attributes.get(MEET_USER_ID_KEY))
             .map(Object::toString)
             .map(Long::parseLong)
-            .flatMap(meetUserRepository::findById)
             .orElse(null);
-        if (Objects.isNull(email) || Objects.isNull(meetUser)) {
+        if (Objects.isNull(meetUserId)) {
             return;
         }
 
-        meetUser.leaveMeet();
-
-        Chat chat = Chat.builder()
-            .chatType(ChatType.LEAVE)
-            .meet(meetUser.getMeet())
-            .meetUser(meetUser)
-            .build();
-        chatRepository.save(chat);
+        Chat chat = chatService.leaveChat(meetUserId);
 
         template.convertAndSend(
-            "/subscribe/chat/meet/" + meetUser.getMeet().getId(),
+            "/subscribe/chat/meet/" + chat.getMeet().getId(),
             ChatResponseDto.fromChat(chat)
         );
     }
