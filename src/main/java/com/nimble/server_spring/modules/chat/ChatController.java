@@ -1,54 +1,51 @@
 package com.nimble.server_spring.modules.chat;
 
-import com.fasterxml.jackson.databind.JsonMappingException.Reference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.error.NotValidReason;
-import com.nimble.server_spring.infra.error.TypeMismatchReason;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.messaging.WebSocketExceptionHandler;
+import com.nimble.server_spring.infra.messaging.WebSocketControllerSupport;
 import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequest;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
-import com.nimble.server_spring.modules.meet.MeetUserRepository;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserService;
-import java.security.Principal;
 import java.util.Objects;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-@Controller
 @Slf4j
-@RequiredArgsConstructor
 @Transactional
-public class ChatController {
+@Controller
+public class ChatController extends WebSocketControllerSupport {
 
-    public static final String MEET_USER_ID_KEY = "meetUserId";
+    private static final String MEET_USER_ID_KEY = "meetUserId";
     private final SimpMessageSendingOperations template;
-    private final ChatRepository chatRepository;
-    private final MeetUserRepository meetUserRepository;
     private final UserService userService;
-    private final ObjectMapper objectMapper;
     private final ChatService chatService;
+
+    @Autowired
+    public ChatController(
+        WebSocketExceptionHandler webSocketExceptionHandler,
+        SimpMessageSendingOperations template,
+        UserService userService,
+        ChatService chatService
+    ) {
+        super(webSocketExceptionHandler);
+        this.template = template;
+        this.userService = userService;
+        this.chatService = chatService;
+    }
 
     @MessageMapping("/meet/{meetId}/chat/enter")
     public void enterUser(
@@ -107,50 +104,5 @@ public class ChatController {
             "/subscribe/chat/meet/" + chat.getMeet().getId(),
             ChatResponseDto.fromChat(chat)
         );
-    }
-
-    @MessageExceptionHandler
-    @SneakyThrows
-    @SendToUser(value = "/queue/error", broadcast = false)
-    public ErrorResponse handleException(Throwable exception) {
-        log.error("STOMP Web Socket의 채팅 관련 요청 처리 중 예외가 발생했습니다.", exception);
-        if (exception instanceof ErrorCodeException) {
-            ErrorCode errorCode = ((ErrorCodeException) exception).getErrorCode();
-            return errorCode.toErrorResponse();
-        } else if (exception instanceof MessageConversionException
-                   && exception.getCause() instanceof InvalidFormatException) {
-            InvalidFormatException invalidFormatException = (InvalidFormatException) (exception.getCause());
-            String fieldName = invalidFormatException.getPath().stream()
-                .findFirst()
-                .map(Reference::getFieldName)
-                .orElse(null);
-            TypeMismatchReason typeMismatchReason = TypeMismatchReason.create(
-                fieldName,
-                invalidFormatException.getTargetType(),
-                invalidFormatException.getValue()
-            );
-            return typeMismatchReason.toErrorResponse(objectMapper);
-        } else if (exception instanceof MethodArgumentNotValidException) {
-            log.info("MethodArgumentNotValidException occurred");
-            BindingResult bindingResult = ((MethodArgumentNotValidException) exception)
-                .getBindingResult();
-            if (Objects.isNull(bindingResult)) {
-                log.error(
-                    "MethodArgumentNotValidException 이 발생했지만, bindingResult 가 null 입니다.");
-                return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
-            }
-
-            if (!Objects.isNull(bindingResult.getGlobalError())) {
-                log.info(
-                    "Chat 메시징 처리 과정에서 GlobalError가 발생했습니다. - {}",
-                    bindingResult.getGlobalError()
-                );
-                return ErrorResponse.createBadRequestResponse("payload가 null이거나 적절한 형식이 아닙니다.");
-            }
-
-            return NotValidReason.create(bindingResult.getFieldErrors())
-                .toErrorResponse(objectMapper);
-        }
-        return ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
     }
 }
