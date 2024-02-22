@@ -11,8 +11,9 @@ import com.nimble.server_spring.infra.http.CookieParser;
 import com.nimble.server_spring.infra.http.BearerTokenParser;
 import com.nimble.server_spring.infra.security.dto.request.LocalLoginRequestDto;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
-import com.nimble.server_spring.infra.security.dto.response.LoginResponseDto;
-import com.nimble.server_spring.modules.auth.dto.response.UserResponseDto;
+import com.nimble.server_spring.infra.security.dto.response.LoginResponse;
+import com.nimble.server_spring.modules.auth.dto.response.JwtTokenResponse;
+import com.nimble.server_spring.modules.auth.dto.response.UserResponse;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,16 +52,12 @@ public class AuthController {
         ErrorCode.EMAIL_ALREADY_EXISTS,
         ErrorCode.NOT_SHA256_ENCRYPTED
     })
-    public ResponseEntity<UserResponseDto> signup(
+    public ResponseEntity<UserResponse> signup(
         @RequestBody @Validated @Parameter(description = "회원 가입 정보", required = true)
         LocalSignupRequestDto localSignupDto
     ) {
-        User user = authService.signup(localSignupDto);
-
-        return new ResponseEntity<>(
-            UserResponseDto.fromUser(user),
-            HttpStatus.CREATED
-        );
+        UserResponse userResponse = authService.signup(localSignupDto);
+        return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
     }
 
     @PostMapping("/refresh")
@@ -73,7 +70,7 @@ public class AuthController {
         ErrorCode.EXPIRED_REFRESH_TOKEN,
     })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ResponseEntity<LoginResponseDto> refresh(
+    public ResponseEntity<LoginResponse> refresh(
         HttpServletRequest request,
         HttpServletResponse response
     ) {
@@ -84,18 +81,16 @@ public class AuthController {
         String accessToken = BearerTokenParser.from(request).getToken()
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST));
 
-        JwtToken jwtToken = authService.rotateRefreshToken(refreshToken, accessToken);
+        JwtTokenResponse jwtTokenResponse
+            = authService.rotateRefreshToken(refreshToken, accessToken);
 
         response.addCookie(
-            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
+            tokenCookieFactory.createAccessTokenCookie(jwtTokenResponse.getAccessToken())
         );
         response.addCookie(
-            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
+            tokenCookieFactory.createRefreshTokenCookie(jwtTokenResponse.getRefreshToken())
         );
-        return new ResponseEntity<>(
-            LoginResponseDto.fromJwtToken(jwtToken),
-            HttpStatus.OK
-        );
+        return new ResponseEntity<>(LoginResponse.fromJwtToken(jwtTokenResponse), HttpStatus.OK);
     }
 
     @GetMapping("/whoami")
@@ -105,19 +100,16 @@ public class AuthController {
         ErrorCode.USER_NOT_FOUND,
     })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ResponseEntity<UserResponseDto> whoami(Principal principal) {
+    public ResponseEntity<UserResponse> whoami(Principal principal) {
         User currentUser = userService.getUserByPrincipal(principal);
 
-        return new ResponseEntity<>(
-            UserResponseDto.fromUser(currentUser),
-            HttpStatus.OK
-        );
+        return new ResponseEntity<>(UserResponse.fromUser(currentUser), HttpStatus.OK);
     }
 
     @PostMapping("/login/local")
     @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
     @ApiErrorCodes({ErrorCode.LOGIN_FAILED})
-    public ResponseEntity<LoginResponseDto> login(
+    public ResponseEntity<LoginResponse> login(
         @RequestBody @Validated @Parameter(description = "로그인 정보", required = true)
         LocalLoginRequestDto localLoginDto
     ) {

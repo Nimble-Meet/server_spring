@@ -7,6 +7,8 @@ import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.jwt.JwtTokenType;
 import com.nimble.server_spring.infra.security.RoleType;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
+import com.nimble.server_spring.modules.auth.dto.response.JwtTokenResponse;
+import com.nimble.server_spring.modules.auth.dto.response.UserResponse;
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
@@ -27,7 +29,7 @@ public class AuthService {
     private final AuthTokenManager authTokenManager;
     private final PasswordEncoder passwordEncoder;
 
-    public User signup(LocalSignupRequestDto localSignupDto) {
+    public UserResponse signup(LocalSignupRequestDto localSignupDto) {
         boolean isEmailAlreadyExists = userRepository.existsByEmail(
             localSignupDto.getEmail()
         );
@@ -45,10 +47,33 @@ public class AuthService {
             .providerId(null)
             .build();
 
-        return userRepository.save(user);
+        return UserResponse.fromUser(userRepository.save(user));
     }
 
-    public JwtToken rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
+    public JwtTokenResponse publishJwtToken(Long userId, RoleType roleType) {
+        AuthToken accessToken = authTokenManager.publishToken(
+            userId,
+            roleType,
+            JwtTokenType.ACCESS
+        );
+        AuthToken refreshToken = authTokenManager.publishToken(
+            userId,
+            null,
+            JwtTokenType.REFRESH
+        );
+
+        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
+            .map(token -> token.reissue(accessToken, refreshToken))
+            .orElseGet(() -> {
+                User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND));
+                JwtToken newToken = JwtToken.issue(accessToken, refreshToken, user);
+                return jwtTokenRepository.save(newToken);
+            });
+        return JwtTokenResponse.fromJwtToken(jwtToken);
+    }
+
+    public JwtTokenResponse rotateRefreshToken(String prevRefreshToken, String prevAccessToken) {
         JwtToken jwtToken = jwtTokenRepository.findOneByRefreshToken(prevRefreshToken)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.INVALID_REFRESH_TOKEN));
         if (!jwtToken.equalsAccessToken(prevAccessToken)) {
@@ -71,6 +96,7 @@ public class AuthService {
             JwtTokenType.REFRESH
         );
 
-        return jwtToken.reissue(newAccessToken, newRefreshToken);
+        jwtToken.reissue(newAccessToken, newRefreshToken);
+        return JwtTokenResponse.fromJwtToken(jwtToken);
     }
 }
