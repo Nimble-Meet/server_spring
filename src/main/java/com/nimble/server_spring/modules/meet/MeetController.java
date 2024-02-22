@@ -109,7 +109,7 @@ public class MeetController {
         ErrorCode.USER_NOT_FOUND_BY_EMAIL,
         ErrorCode.USER_ALREADY_INVITED
     })
-    public ResponseEntity<MeetUserResponseDto> invite(
+    public ResponseEntity<MeetResponseDto> invite(
         @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
         Long meetId,
         @RequestBody @Validated @Parameter(description = "초대할 멤버의 정보", required = true)
@@ -118,14 +118,14 @@ public class MeetController {
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        MeetUser meetUser = meetService.invite(
+        Meet meet = meetService.invite(
             currentUser,
             meetId,
             meetInviteRequest.toServiceRequest()
         );
 
         return new ResponseEntity<>(
-            MeetUserResponseDto.fromMeetUser(meetUser),
+            MeetResponseDto.fromMeet(meet),
             HttpStatus.OK
         );
     }
@@ -137,7 +137,7 @@ public class MeetController {
         ErrorCode.NOT_MEET_HOST_FORBIDDEN,
         ErrorCode.MEET_USER_NOT_FOUND
     })
-    public ResponseEntity<MeetUserResponseDto> kickOut(
+    public ResponseEntity<MeetResponseDto> kickOut(
         @PathVariable @Parameter(description = "멤버를 강퇴할 미팅의 ID", required = true)
         Long meetId,
         @PathVariable @Parameter(description = "강퇴할 멤버의 ID", required = true)
@@ -146,14 +146,14 @@ public class MeetController {
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        MeetUser meetUser = meetService.kickOut(
+        Meet meet = meetService.kickOut(
             currentUser,
             meetId,
             meetUserId
         );
 
         return new ResponseEntity<>(
-            MeetUserResponseDto.fromMeetUser(meetUser),
+            MeetResponseDto.fromMeet(meet),
             HttpStatus.OK
         );
     }

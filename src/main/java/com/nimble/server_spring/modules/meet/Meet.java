@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Optional;
 
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
@@ -16,17 +17,25 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(of = {"id", "meetName", "description"})
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Meet extends BaseEntity {
 
     @Id
     @GeneratedValue
+    @ToString.Include
     private Long id;
 
-    @Column
     @NotNull
     @Length(min = 2, max = 24)
+    @ToString.Include
     private String meetName;
+
+    @Column(unique = true)
+    @NotNull
+    @ToString.Include
+    @EqualsAndHashCode.Include
+    private final UUID code = UUID.randomUUID();
 
     @Column
     @Length(max = 48)
@@ -44,7 +53,7 @@ public class Meet extends BaseEntity {
 
     public boolean isHostedBy(User user) {
         return this.meetUsers.stream()
-            .filter(meetUser -> meetUser.getUser().getId().equals(user.getId()))
+            .filter(meetUser -> meetUser.getUser().equals(user))
             .findFirst()
             .map(MeetUser::isHost)
             .orElse(false);
@@ -52,16 +61,23 @@ public class Meet extends BaseEntity {
 
     public boolean isParticipatedBy(User user) {
         return this.meetUsers.stream()
-            .anyMatch(meetUser -> meetUser.getUser().getId().equals(user.getId()));
+            .anyMatch(meetUser -> meetUser.getUser().equals(user));
     }
 
-    public Optional<MeetUser> findMeetUser(Long meetUserId) {
-        return this.meetUsers.stream()
-            .filter(meetUser -> meetUser.getId().equals(meetUserId))
-            .findFirst();
+    public void addUser(User user, MeetUserRole meetUserRole) {
+        MeetUser meetUser = MeetUser.builder()
+            .meet(this)
+            .user(user)
+            .meetUserRole(meetUserRole)
+            .build();
+        meetUsers.add(meetUser);
     }
 
-    public void addMeetUser(MeetUser meetUser) {
-        this.meetUsers.add(meetUser);
+    public boolean hasMeetUser(MeetUser meetUser) {
+        return meetUsers.contains(meetUser);
+    }
+
+    public void removeMeetUser(MeetUser meetUser) {
+        meetUsers.remove(meetUser);
     }
 }

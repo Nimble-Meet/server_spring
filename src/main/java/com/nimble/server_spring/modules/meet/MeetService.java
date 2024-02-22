@@ -9,7 +9,6 @@ import com.nimble.server_spring.modules.user.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +23,7 @@ public class MeetService {
 
     private final MeetRepository meetRepository;
     private final UserRepository userRepository;
+    private final MeetUserRepository meetUserRepository;
 
     private static final int INVITE_LIMIT_NUMBER = 3;
 
@@ -32,31 +32,20 @@ public class MeetService {
             .meetName(meetCreateRequest.getMeetName())
             .description(meetCreateRequest.getDescription())
             .build();
-
-        MeetUser meetUser = MeetUser.builder()
-            .meet(meet)
-            .user(user)
-            .meetUserRole(MeetUserRole.HOST)
-            .build();
-        meet.addMeetUser(meetUser);
-
-        log.info("Meet created: {}", meet);
-
+        meet.addUser(user, MeetUserRole.HOST);
         return meetRepository.save(meet);
     }
 
-    public MeetUser invite(
+    public Meet invite(
         User currentUser,
         Long meetId,
         @Valid MeetInviteServiceRequest meetInviteRequest
     ) {
         Meet meet = meetRepository.findMeetById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
-
         if (!meet.isHostedBy(currentUser)) {
             throw new ErrorCodeException(ErrorCode.NOT_MEET_HOST_FORBIDDEN);
         }
-
         if (meet.getMeetUsers().size() >= INVITE_LIMIT_NUMBER) {
             throw new ErrorCodeException(ErrorCode.MEET_INVITE_LIMIT_OVER);
         }
@@ -64,24 +53,14 @@ public class MeetService {
         String email = meetInviteRequest.getEmail();
         User userToInvite = userRepository.findOneByEmail(email)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
-
-        boolean isUserInvited = meet.getMeetUsers().stream()
-            .anyMatch(meetUser -> meetUser.getUser().getEmail().equals(email));
-        if (isUserInvited) {
+        if (meet.isParticipatedBy(userToInvite)) {
             throw new ErrorCodeException(ErrorCode.USER_ALREADY_INVITED);
         }
-
-        MeetUser meetUser = MeetUser.builder()
-            .meet(meet)
-            .user(userToInvite)
-            .meetUserRole(MeetUserRole.MEMBER)
-            .build();
-        meet.addMeetUser(meetUser);
-
-        return meetUser;
+        meet.addUser(userToInvite, MeetUserRole.MEMBER);
+        return meet;
     }
 
-    public MeetUser kickOut(User currentUser, Long meetId, Long meetUserId) {
+    public Meet kickOut(User currentUser, Long meetId, Long meetUserId) {
         Meet meet = meetRepository.findMeetById(meetId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_NOT_FOUND));
 
@@ -89,10 +68,12 @@ public class MeetService {
             throw new ErrorCodeException(ErrorCode.NOT_MEET_HOST_FORBIDDEN);
         }
 
-        MeetUser meetUser = meet.findMeetUser(meetUserId)
+        MeetUser meetUser = meetUserRepository.findById(meetUserId)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND));
-        meet.getMeetUsers().remove(meetUser);
-
-        return meetUser;
+        if (!meet.hasMeetUser(meetUser)) {
+            throw new ErrorCodeException(ErrorCode.MEET_USER_NOT_FOUND);
+        }
+        meet.removeMeetUser(meetUser);
+        return meet;
     }
 }

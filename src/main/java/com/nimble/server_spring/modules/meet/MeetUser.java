@@ -6,17 +6,12 @@ import com.nimble.server_spring.modules.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
-
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "meetUserRole", "isEntered"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class MeetUser extends BaseEntity {
 
     @Id
@@ -26,11 +21,13 @@ public class MeetUser extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meet_id")
     @NotNull
+    @EqualsAndHashCode.Include
     private Meet meet;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @NotNull
+    @EqualsAndHashCode.Include
     private User user;
 
     @Enumerated(EnumType.STRING)
