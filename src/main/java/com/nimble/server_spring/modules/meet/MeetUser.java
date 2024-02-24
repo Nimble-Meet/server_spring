@@ -8,6 +8,14 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
+@Table(
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "UNQ_MEET_USER",
+            columnNames = {"meet_id", "user_id"}
+        )
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "meetUserRole", "isEntered"})
