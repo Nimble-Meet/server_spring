@@ -10,6 +10,7 @@ import com.nimble.server_spring.modules.meet.dto.request.KickOutMeetServiceReque
 import com.nimble.server_spring.modules.meet.dto.response.MeetResponse;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class MeetService {
 
     private final MeetRepository meetRepository;
     private final UserRepository userRepository;
-    private final MeetUserRepository meetUserRepository;
+    private final EntityManager entityManager;
 
     private static final int INVITE_LIMIT_NUMBER = 3;
 
@@ -78,6 +79,7 @@ public class MeetService {
         }
 
         meet.addParticipant(userToInvite);
+        entityManager.flush();
         return MeetResponse.fromMeet(meet);
     }
 
