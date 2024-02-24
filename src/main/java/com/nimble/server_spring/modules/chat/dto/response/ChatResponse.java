@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class ChatResponse {
 
     private Long chatId;
-    private Long meetUserId;
     private Long meetId;
     private String email;
     private LocalDateTime createdAt;
@@ -30,7 +29,6 @@ public class ChatResponse {
         String message
     ) {
         this.chatId = chatId;
-        this.meetUserId = meetUserId;
         this.meetId = meetId;
         this.email = email;
         this.createdAt = createdAt;
@@ -41,7 +39,6 @@ public class ChatResponse {
     public static ChatResponse fromChat(Chat chat) {
         return ChatResponse.builder()
             .chatId(chat.getId())
-            .meetUserId(chat.getMeetUser().getId())
             .meetId(chat.getMeetUser().getMeet().getId())
             .email(chat.getMeetUser().getUser().getEmail())
             .createdAt(chat.getCreatedAt())

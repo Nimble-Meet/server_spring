@@ -57,11 +57,11 @@ public class MeetUser extends BaseEntity {
         return this.meetUserRole == MeetUserRole.HOST;
     }
 
-    public void enterMeet() {
+    public void enter() {
         this.isEntered = true;
     }
 
-    public void leaveMeet() {
+    public void leave() {
         this.isEntered = false;
     }
 }

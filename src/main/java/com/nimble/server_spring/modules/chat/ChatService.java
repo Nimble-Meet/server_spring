@@ -10,6 +10,7 @@ import com.nimble.server_spring.modules.chat.dto.response.ChatResponse;
 import com.nimble.server_spring.modules.meet.MeetUser;
 import com.nimble.server_spring.modules.meet.MeetUserRepository;
 import com.nimble.server_spring.modules.user.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -17,10 +18,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Validated
 public class ChatService {
 
     private final ChatRepository chatRepository;
@@ -29,12 +32,12 @@ public class ChatService {
     @Transactional
     public ChatResponse enterChat(EnterChatServiceRequest enterChatRequest) {
         MeetUser meetUser = meetUserRepository
-            .findByUserIdAndMeetId(
+            .findByUser_IdAndMeet_Id(
                 enterChatRequest.getCurrentUser().getId(),
                 enterChatRequest.getMeetId()
             )
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.NOT_MEET_USER_FORBIDDEN));
-        meetUser.enterMeet();
+        meetUser.enter();
 
         Chat chat = chatRepository.save(Chat.createEnter(meetUser));
         return ChatResponse.fromChat(chat);
@@ -43,7 +46,7 @@ public class ChatService {
     @Transactional
     public ChatResponse talkChat(TalkChatServiceRequest talkChatServiceRequest) {
         MeetUser meetUser = meetUserRepository
-            .findByUserIdAndMeetId(
+            .findByUser_IdAndMeet_Id(
                 talkChatServiceRequest.getCurrentUser().getId(),
                 talkChatServiceRequest.getMeetId()
             )
@@ -56,10 +59,13 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatResponse leaveChat(LeaveChatServiceRequest leaveChatRequest) {
-        MeetUser meetUser = meetUserRepository.findMeetUserById(leaveChatRequest.getMeetUserId())
+    public ChatResponse leaveChat(@Valid LeaveChatServiceRequest leaveChatRequest) {
+        MeetUser meetUser = meetUserRepository.findByEmailAndMeetId(
+                leaveChatRequest.getEmail(),
+                leaveChatRequest.getMeetId()
+            )
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.NOT_MEET_USER_FORBIDDEN));
-        meetUser.leaveMeet();
+        meetUser.leave();
 
         Chat chat = chatRepository.save(Chat.createLeave(meetUser));
         return ChatResponse.fromChat(chat);

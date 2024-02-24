@@ -31,7 +31,8 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Controller
 public class ChatController extends WebSocketControllerSupport {
 
-    private static final String MEET_USER_ID_KEY = "meetUserId";
+    public static final String SESSION_EMAIL_KEY = "session_email";
+    public static final String SESSION_MEET_ID_KEY = "session_meet_id";
     private final SimpMessageSendingOperations template;
     private final UserService userService;
     private final ChatService chatService;
@@ -64,7 +65,10 @@ public class ChatController extends WebSocketControllerSupport {
 
         Optional.ofNullable(headerAccessor.getSessionAttributes())
             .ifPresent(
-                attributes -> attributes.put(MEET_USER_ID_KEY, chatResponse.getMeetUserId())
+                attributes -> {
+                    attributes.put(SESSION_EMAIL_KEY, chatResponse.getEmail());
+                    attributes.put(SESSION_MEET_ID_KEY, chatResponse.getMeetId());
+                }
             );
         template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponse);
     }
@@ -88,17 +92,18 @@ public class ChatController extends WebSocketControllerSupport {
     @EventListener
     public void webSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        Long meetUserId = Optional.ofNullable(headerAccessor.getSessionAttributes())
-            .map(attributes -> attributes.get(MEET_USER_ID_KEY))
-            .map(Object::toString)
-            .map(Long::parseLong)
+        LeaveChatServiceRequest leaveChatServiceRequest = Optional
+            .ofNullable(headerAccessor.getSessionAttributes())
+            .map(LeaveChatServiceRequest::fromAttributesMap)
             .orElse(null);
-        if (Objects.isNull(meetUserId)) {
+        boolean isNotAuthenticated = Objects.isNull(leaveChatServiceRequest) ||
+                                     Objects.isNull(leaveChatServiceRequest.getEmail()) ||
+                                     Objects.isNull(leaveChatServiceRequest.getMeetId());
+        if (isNotAuthenticated) {
             return;
         }
 
-        ChatResponse chatResponse
-            = chatService.leaveChat(LeaveChatServiceRequest.create(meetUserId));
+        ChatResponse chatResponse = chatService.leaveChat(leaveChatServiceRequest);
 
         template.convertAndSend(
             "/subscribe/chat/meet/" + chatResponse.getMeetId(),
