@@ -1,15 +1,15 @@
 package com.nimble.server_spring.modules.meet.dto.request;
 
+import com.nimble.server_spring.modules.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.Length;
 
 @Getter
 @NoArgsConstructor
-public class MeetCreateRequest {
+public class CreateMeetRequest {
 
     @NotBlank
     @Schema(example = "My Meet", description = "미팅 이름")
@@ -19,15 +19,16 @@ public class MeetCreateRequest {
     private String description;
 
     @Builder
-    private MeetCreateRequest(String meetName, String description) {
+    private CreateMeetRequest(String meetName, String description) {
         this.meetName = meetName;
         this.description = description;
     }
 
-    public MeetCreateServiceRequest toServiceRequest() {
-        return MeetCreateServiceRequest.builder()
+    public CreateMeetServiceRequest toServiceRequest(User user) {
+        return CreateMeetServiceRequest.builder()
             .meetName(meetName)
             .description(description)
+            .hostUser(user)
             .build();
     }
 }

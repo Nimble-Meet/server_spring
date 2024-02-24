@@ -6,8 +6,11 @@ import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.modules.chat.ChatService;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
-import com.nimble.server_spring.modules.meet.dto.request.MeetCreateRequest;
-import com.nimble.server_spring.modules.meet.dto.request.MeetInviteRequest;
+import com.nimble.server_spring.modules.meet.dto.request.CreateMeetRequest;
+import com.nimble.server_spring.modules.meet.dto.request.GetMeetListServiceRequest;
+import com.nimble.server_spring.modules.meet.dto.request.GetMeetServiceRequest;
+import com.nimble.server_spring.modules.meet.dto.request.InviteMeetRequest;
+import com.nimble.server_spring.modules.meet.dto.request.KickOutMeetRequest;
 import com.nimble.server_spring.modules.meet.dto.response.MeetResponse;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserService;
@@ -40,14 +43,13 @@ public class MeetController {
     @Operation(summary = "미팅 생성", description = "미팅 생성 정보를 이용해서 미팅을 생성합니다.")
     public ResponseEntity<MeetResponse> createMeet(
         @RequestBody @Validated @Parameter(description = "미팅 생성 정보", required = true)
-        MeetCreateRequest meetCreateRequest,
+        CreateMeetRequest createMeetRequest,
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipal(principal);
 
         MeetResponse meetResponse = meetService.createMeet(
-            currentUser,
-            meetCreateRequest.toServiceRequest()
+            createMeetRequest.toServiceRequest(currentUser)
         );
         return new ResponseEntity<>(meetResponse, HttpStatus.CREATED);
     }
@@ -57,7 +59,9 @@ public class MeetController {
     public ResponseEntity<List<MeetResponse>> getMeets(Principal principal) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        List<MeetResponse> meetResponseList = meetService.getMeetList(currentUser);
+        List<MeetResponse> meetResponseList = meetService.getMeetList(
+            GetMeetListServiceRequest.create(currentUser)
+        );
         return new ResponseEntity<>(meetResponseList, HttpStatus.OK);
     }
 
@@ -74,11 +78,13 @@ public class MeetController {
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        MeetResponse meetResponse = meetService.getMeet(meetId, currentUser);
+        MeetResponse meetResponse = meetService.getMeet(
+            GetMeetServiceRequest.create(meetId, currentUser)
+        );
         return new ResponseEntity<>(meetResponse, HttpStatus.OK);
     }
 
-    @PostMapping("/{meetId}/member")
+    @PostMapping("/{meetId}/invite")
     @Operation(summary = "멤버 초대", description = "email에 해당하는 사용자를 특정 미팅에 초대합니다.")
     @ApiErrorCodes({
         ErrorCode.MEET_NOT_FOUND,
@@ -91,39 +97,36 @@ public class MeetController {
         @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
         Long meetId,
         @RequestBody @Validated @Parameter(description = "초대할 멤버의 정보", required = true)
-        MeetInviteRequest meetInviteRequest,
+        InviteMeetRequest inviteMeetRequest,
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipal(principal);
 
         MeetResponse meetResponse = meetService.invite(
-            currentUser,
-            meetId,
-            meetInviteRequest.toServiceRequest()
+            inviteMeetRequest.toServiceRequest(meetId, currentUser)
         );
         return new ResponseEntity<>(meetResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{meetId}/member/{meetUserId}")
+    @PostMapping("/{meetId}/kickout")
     @Operation(summary = "멤버 강퇴", description = "특정 미팅에서 멤버를 강퇴합니다.")
     @ApiErrorCodes({
         ErrorCode.MEET_NOT_FOUND,
         ErrorCode.NOT_MEET_HOST_FORBIDDEN,
-        ErrorCode.MEET_USER_NOT_FOUND
+        ErrorCode.USER_NOT_FOUND_BY_EMAIL,
+        ErrorCode.USER_NOT_INVITED
     })
     public ResponseEntity<MeetResponse> kickOut(
         @PathVariable @Parameter(description = "멤버를 강퇴할 미팅의 ID", required = true)
         Long meetId,
-        @PathVariable @Parameter(description = "강퇴할 멤버의 ID", required = true)
-        Long meetUserId,
+        @RequestBody @Validated @Parameter(description = "강퇴할 멤버의 정보", required = true)
+        KickOutMeetRequest kickOutMeetRequest,
         Principal principal
     ) {
         User currentUser = userService.getUserByPrincipal(principal);
 
         MeetResponse meetResponse = meetService.kickOut(
-            currentUser,
-            meetId,
-            meetUserId
+            kickOutMeetRequest.toServiceRequest(meetId, currentUser)
         );
         return new ResponseEntity<>(meetResponse, HttpStatus.OK);
     }
