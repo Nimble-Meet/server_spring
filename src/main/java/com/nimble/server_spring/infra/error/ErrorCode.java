@@ -49,10 +49,12 @@ public enum ErrorCode {
     MEET_USER_NOT_FOUND(MEET, NOT_FOUND, "미팅 참여자를 찾을 수 없습니다."),
     NOT_MEET_USER_FORBIDDEN(MEET, FORBIDDEN, "미팅 참여자가 아니므로 요청이 불가능합니다."),
     NOT_MEET_HOST_FORBIDDEN(MEET, FORBIDDEN, "미팅 호스트가 아니므로 요청이 불가능합니다."),
+    CANNOT_KICKOUT_HOST(MEET, FORBIDDEN, "미팅 호스트는 추방할 수 없습니다."),
 
     // 409 CONFLICT
     MEET_INVITE_LIMIT_OVER(MEET, CONFLICT, "초대 가능한 인원을 초과했습니다."),
     USER_ALREADY_INVITED(MEET, CONFLICT, "이미 초대된 사용자입니다."),
+    USER_NOT_INVITED(MEET, CONFLICT, "초대되지 않은 사용자입니다."),
 
     // ==============================================================
     // USER ERROR CODE

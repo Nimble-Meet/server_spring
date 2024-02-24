@@ -11,22 +11,27 @@ import lombok.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(of = {"id", "email", "nickname"})
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class User extends BaseEntity {
 
     @Id
     @GeneratedValue
+    @ToString.Include
     private Long id;
 
     @Column(unique = true)
     @NotNull
     @Email
+    @ToString.Include
+    @EqualsAndHashCode.Include
     private String email;
 
     @Pattern(regexp = "^\\$2[ayb]\\$.{56}$", message = "비밀번호는 BCrpyt로 암호화된 문자열이어야 합니다.")
     private String password;
 
     @NotNull
+    @ToString.Include
     private String nickname;
 
     @Enumerated(EnumType.STRING)
@@ -48,5 +53,15 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.providerType = providerType;
         this.providerId = providerId;
+    }
+
+    public static User createLocalUser(String email, String password, String nickname) {
+        return User.builder()
+            .email(email)
+            .password(password)
+            .nickname(nickname)
+            .providerType(OauthProvider.LOCAL)
+            .providerId(null)
+            .build();
     }
 }

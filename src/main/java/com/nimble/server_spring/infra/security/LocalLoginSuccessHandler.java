@@ -2,15 +2,11 @@ package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
-import com.nimble.server_spring.infra.jwt.AuthToken;
-import com.nimble.server_spring.infra.jwt.AuthTokenManager;
-import com.nimble.server_spring.infra.jwt.JwtTokenType;
-import com.nimble.server_spring.modules.auth.JwtToken;
-import com.nimble.server_spring.modules.auth.JwtTokenRepository;
+import com.nimble.server_spring.modules.auth.AuthService;
 import com.nimble.server_spring.modules.auth.TokenCookieFactory;
-import com.nimble.server_spring.modules.auth.dto.response.LoginResponseDto;
-import com.nimble.server_spring.modules.user.User;
-import com.nimble.server_spring.modules.user.UserRepository;
+import com.nimble.server_spring.infra.security.dto.response.LoginResponse;
+import com.nimble.server_spring.modules.auth.dto.request.PublishTokenServiceRequest;
+import com.nimble.server_spring.modules.auth.dto.response.JwtTokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -26,11 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final AuthTokenManager authTokenManager;
-    private final UserRepository userRepository;
-    private final JwtTokenRepository jwtTokenRepository;
     private final ObjectMapper objectMapper;
     private final TokenCookieFactory tokenCookieFactory;
+    private final AuthService authService;
 
     @Override
     @Transactional
@@ -41,37 +35,22 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
         RoleType roleType = authentication.getAuthorities().stream()
             .findFirst()
             .map(authority -> RoleType.of(authority.getAuthority()))
-            .orElseGet(() -> RoleType.GUEST);
+            .orElse(RoleType.GUEST);
 
-        AuthToken accessToken = authTokenManager.publishToken(
-            userId,
-            roleType,
-            JwtTokenType.ACCESS
+        JwtTokenResponse jwtTokenResponse = authService.publishJwtToken(
+            PublishTokenServiceRequest.create(userId, roleType)
         );
-        AuthToken refreshToken = authTokenManager.publishToken(
-            userId,
-            null,
-            JwtTokenType.REFRESH
-        );
-
-        JwtToken jwtToken = jwtTokenRepository.findOneByUserId(userId)
-            .map(token -> token.reissue(accessToken, refreshToken))
-            .orElseGet(() -> {
-                User user = userRepository.getReferenceById(userId);
-                JwtToken newToken = JwtToken.issue(accessToken, refreshToken, user);
-                return jwtTokenRepository.save(newToken);
-            });
 
         response.addCookie(
-            tokenCookieFactory.createAccessTokenCookie(jwtToken.getAccessToken())
+            tokenCookieFactory.createAccessTokenCookie(jwtTokenResponse.getAccessToken())
         );
         response.addCookie(
-            tokenCookieFactory.createRefreshTokenCookie(jwtToken.getRefreshToken())
+            tokenCookieFactory.createRefreshTokenCookie(jwtTokenResponse.getRefreshToken())
         );
 
         ServletResponseWrapper.of(response).sendJsonResponse(
             HttpServletResponse.SC_CREATED,
-            LoginResponseDto.fromJwtToken(jwtToken).toJsonString(objectMapper)
+            LoginResponse.fromJwtToken(jwtTokenResponse).toJsonString(objectMapper)
         );
     }
 }

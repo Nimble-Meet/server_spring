@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WebSocketErrorHandler extends StompSubProtocolErrorHandler {
+public class WebSocketSubProtocolErrorHandler extends StompSubProtocolErrorHandler {
 
     private final ObjectMapper objectMapper;
 

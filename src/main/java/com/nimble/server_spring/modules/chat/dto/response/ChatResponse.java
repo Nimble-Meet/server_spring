@@ -9,38 +9,40 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ChatResponseDto {
+public class ChatResponse {
 
     private Long chatId;
-    private Long meetUserId;
+    private Long meetId;
     private String email;
     private LocalDateTime createdAt;
     private ChatType chatType;
     private String message;
 
     @Builder
-    public ChatResponseDto(
+    public ChatResponse(
         Long chatId,
         Long meetUserId,
+        Long meetId,
         String email,
         LocalDateTime createdAt,
         ChatType chatType,
         String message
     ) {
         this.chatId = chatId;
-        this.meetUserId = meetUserId;
+        this.meetId = meetId;
         this.email = email;
         this.createdAt = createdAt;
         this.chatType = chatType;
         this.message = message;
     }
 
-    public static ChatResponseDto fromChat(Chat chat) {
-        return ChatResponseDto.builder()
+    public static ChatResponse fromChat(Chat chat) {
+        return ChatResponse.builder()
+            .chatId(chat.getId())
+            .meetId(chat.getMeetUser().getMeet().getId())
+            .email(chat.getMeetUser().getUser().getEmail())
             .createdAt(chat.getCreatedAt())
             .chatType(chat.getChatType())
-            .email(chat.getMeetUser().getUser().getEmail())
-            .meetUserId(chat.getMeetUser().getId())
             .message(chat.getMessage())
             .build();
     }

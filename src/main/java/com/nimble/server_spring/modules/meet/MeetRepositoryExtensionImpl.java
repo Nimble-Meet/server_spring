@@ -3,7 +3,6 @@ package com.nimble.server_spring.modules.meet;
 import com.nimble.server_spring.modules.user.QUser;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

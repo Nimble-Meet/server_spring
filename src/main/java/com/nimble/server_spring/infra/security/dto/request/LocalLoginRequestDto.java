@@ -1,15 +1,12 @@
-package com.nimble.server_spring.modules.auth.dto.request;
+package com.nimble.server_spring.infra.security.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public class LocalLoginRequestDto {
@@ -19,4 +16,10 @@ public class LocalLoginRequestDto {
 
     @Schema(example = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4", description = "SHA256으로 암호화된 비밀번호")
     private String password;
+
+    @Builder
+    private LocalLoginRequestDto(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 }

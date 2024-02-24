@@ -3,28 +3,35 @@ package com.nimble.server_spring.modules.auth.dto.response;
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
 import com.nimble.server_spring.modules.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class UserResponseDto {
+@Getter
+public class UserResponse {
+
+    @Schema(example = "1", description = "유저 ID")
+    private final Long id;
 
     @Schema(example = "user@email.com", description = "사용자 이메일")
-    private String email;
+    private final String email;
 
     @Schema(example = "UserNickname", description = "사용자 닉네임")
-    private String nickname;
+    private final String nickname;
 
     @Schema(example = "LOCAL", description = "Oauth 제공자")
-    private OauthProvider providerType;
+    private final OauthProvider providerType;
 
-    public static UserResponseDto fromUser(User user) {
-        return UserResponseDto.builder()
+    @Builder
+    private UserResponse(Long id, String email, String nickname, OauthProvider providerType) {
+        this.id = id;
+        this.email = email;
+        this.nickname = nickname;
+        this.providerType = providerType;
+    }
+
+    public static UserResponse fromUser(User user) {
+        return UserResponse.builder()
+            .id(user.getId())
             .email(user.getEmail())
             .nickname(user.getNickname())
             .providerType(user.getProviderType())

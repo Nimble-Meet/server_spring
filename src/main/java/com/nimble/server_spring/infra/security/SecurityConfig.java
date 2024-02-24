@@ -34,16 +34,12 @@ public class SecurityConfig {
     private final LocalLoginFailureHandler authenticationFailureHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ObjectMapper objectMapper;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final PasswordEncoder passwordEncoder;
 
     @Bean
     public UsernamePasswordAuthenticationFilter customAuthenticationProcessingFilter() {
         LocalLoginFilter filter = new LocalLoginFilter(
-            new LocalLoginAuthenticationManager(userDetailsService, passwordEncoder()),
+            new LocalLoginAuthenticationManager(userDetailsService, passwordEncoder),
             objectMapper
         );
         filter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
