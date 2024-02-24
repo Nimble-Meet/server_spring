@@ -40,7 +40,6 @@ public class Meet extends BaseEntity {
     private String description;
 
     @OneToMany(mappedBy = "meet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @NotNull
     private List<MeetUser> meetUsers = new ArrayList<>();
 
     @Builder
