@@ -54,4 +54,14 @@ public class User extends BaseEntity {
         this.providerType = providerType;
         this.providerId = providerId;
     }
+
+    public static User createLocalUser(String email, String password, String nickname) {
+        return User.builder()
+            .email(email)
+            .password(password)
+            .nickname(nickname)
+            .providerType(OauthProvider.LOCAL)
+            .providerId(null)
+            .build();
+    }
 }

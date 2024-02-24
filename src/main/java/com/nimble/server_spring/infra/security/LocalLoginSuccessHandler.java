@@ -5,6 +5,7 @@ import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import com.nimble.server_spring.modules.auth.AuthService;
 import com.nimble.server_spring.modules.auth.TokenCookieFactory;
 import com.nimble.server_spring.infra.security.dto.response.LoginResponse;
+import com.nimble.server_spring.modules.auth.dto.request.PublishTokenServiceRequest;
 import com.nimble.server_spring.modules.auth.dto.response.JwtTokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,7 +37,9 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
             .map(authority -> RoleType.of(authority.getAuthority()))
             .orElse(RoleType.GUEST);
 
-        JwtTokenResponse jwtTokenResponse = authService.publishJwtToken(userId, roleType);
+        JwtTokenResponse jwtTokenResponse = authService.publishJwtToken(
+            PublishTokenServiceRequest.create(userId, roleType)
+        );
 
         response.addCookie(
             tokenCookieFactory.createAccessTokenCookie(jwtTokenResponse.getAccessToken())

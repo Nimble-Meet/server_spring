@@ -10,8 +10,9 @@ import com.nimble.server_spring.infra.jwt.JwtProperties;
 import com.nimble.server_spring.infra.http.CookieParser;
 import com.nimble.server_spring.infra.http.BearerTokenParser;
 import com.nimble.server_spring.infra.security.dto.request.LocalLoginRequestDto;
-import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequestDto;
+import com.nimble.server_spring.modules.auth.dto.request.LocalSignupRequest;
 import com.nimble.server_spring.infra.security.dto.response.LoginResponse;
+import com.nimble.server_spring.modules.auth.dto.request.RotateTokenServiceRequest;
 import com.nimble.server_spring.modules.auth.dto.response.JwtTokenResponse;
 import com.nimble.server_spring.modules.auth.dto.response.UserResponse;
 import com.nimble.server_spring.modules.user.User;
@@ -54,9 +55,9 @@ public class AuthController {
     })
     public ResponseEntity<UserResponse> signup(
         @RequestBody @Validated @Parameter(description = "회원 가입 정보", required = true)
-        LocalSignupRequestDto localSignupDto
+        LocalSignupRequest localSignupRequest
     ) {
-        UserResponse userResponse = authService.signup(localSignupDto);
+        UserResponse userResponse = authService.signup(localSignupRequest.toServiceRequest());
         return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
     }
 
@@ -74,15 +75,15 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
+        String accessToken = BearerTokenParser.from(request).getToken()
+            .orElseThrow(() -> new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST));
+
         Cookie refreshTokenCookie = CookieParser.from(request).getCookie(REFRESH_TOKEN_COOKIE_KEY)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.REFRESH_TOKEN_DOES_NOT_EXIST));
         String refreshToken = refreshTokenCookie.getValue();
 
-        String accessToken = BearerTokenParser.from(request).getToken()
-            .orElseThrow(() -> new ErrorCodeException(ErrorCode.ACCESS_TOKEN_DOES_NOT_EXIST));
-
         JwtTokenResponse jwtTokenResponse
-            = authService.rotateRefreshToken(refreshToken, accessToken);
+            = authService.rotateToken(RotateTokenServiceRequest.create(accessToken, refreshToken));
 
         response.addCookie(
             tokenCookieFactory.createAccessTokenCookie(jwtTokenResponse.getAccessToken())

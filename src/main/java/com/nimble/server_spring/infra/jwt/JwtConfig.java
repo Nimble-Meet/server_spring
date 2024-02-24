@@ -10,7 +10,7 @@ public class JwtConfig {
 
     @Bean
     public AuthTokenManager authTokenManager(JwtProperties jwtProperties) {
-        return new AuthTokenManagerImpl(
+        return new AuthTokenManager(
             jwtProperties.getAccessTokenSecret(),
             jwtProperties.getRefreshTokenSecret(),
             jwtProperties.getAccessTokenExpiry(),

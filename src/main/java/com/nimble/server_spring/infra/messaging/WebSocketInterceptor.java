@@ -2,8 +2,8 @@ package com.nimble.server_spring.infra.messaging;
 
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.http.BearerTokenParser;
+import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.jwt.JwtTokenType;
 import io.jsonwebtoken.Claims;
 import java.util.Collection;
