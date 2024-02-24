@@ -29,11 +29,6 @@ public class Chat extends BaseEntity {
     private String message;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "meet_id")
-    @NotNull
-    private Meet meet;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meet_user_id")
     @NotNull
     private MeetUser meetUser;
@@ -43,12 +38,32 @@ public class Chat extends BaseEntity {
     public Chat(
         ChatType chatType,
         String message,
-        Meet meet,
         MeetUser meetUser
     ) {
         this.chatType = chatType;
         this.message = message;
-        this.meet = meet;
         this.meetUser = meetUser;
+    }
+
+    public static Chat createEnter(MeetUser meetUser) {
+        return Chat.builder()
+            .chatType(ChatType.ENTER)
+            .meetUser(meetUser)
+            .build();
+    }
+
+    public static Chat createTalk(MeetUser meetUser, String message) {
+        return Chat.builder()
+            .chatType(ChatType.TALK)
+            .message(message)
+            .meetUser(meetUser)
+            .build();
+    }
+
+    public static Chat createLeave(MeetUser meetUser) {
+        return Chat.builder()
+            .chatType(ChatType.LEAVE)
+            .meetUser(meetUser)
+            .build();
     }
 }

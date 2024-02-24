@@ -4,8 +4,10 @@ import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
 import com.nimble.server_spring.infra.messaging.WebSocketExceptionHandler;
 import com.nimble.server_spring.infra.messaging.WebSocketControllerSupport;
-import com.nimble.server_spring.modules.chat.dto.request.ChatTalkRequest;
-import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
+import com.nimble.server_spring.modules.chat.dto.request.EnterChatServiceRequest;
+import com.nimble.server_spring.modules.chat.dto.request.LeaveChatServiceRequest;
+import com.nimble.server_spring.modules.chat.dto.request.TalkChatRequest;
+import com.nimble.server_spring.modules.chat.dto.response.ChatResponse;
 import com.nimble.server_spring.modules.user.User;
 import com.nimble.server_spring.modules.user.UserService;
 import java.util.Objects;
@@ -56,34 +58,31 @@ public class ChatController extends WebSocketControllerSupport {
             .map(userService::getUserByPrincipalLazy)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
-        Chat chat = chatService.enterChat(currentUser, meetId);
+        ChatResponse chatResponse = chatService.enterChat(
+            EnterChatServiceRequest.create(currentUser, meetId)
+        );
 
         Optional.ofNullable(headerAccessor.getSessionAttributes())
             .ifPresent(
-                attributes -> attributes.put(MEET_USER_ID_KEY, chat.getMeetUser().getId())
+                attributes -> attributes.put(MEET_USER_ID_KEY, chatResponse.getMeetUserId())
             );
-        template.convertAndSend(
-            "/subscribe/chat/meet/" + meetId,
-            ChatResponseDto.fromChat(chat)
-        );
+        template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponse);
     }
 
     @MessageMapping("/meet/{meetId}/chat/talk")
     public void sendMessage(
         @DestinationVariable Long meetId,
-        @Payload @Validated ChatTalkRequest chatTalkRequest,
+        @Payload @Validated TalkChatRequest talkChatRequest,
         SimpMessageHeaderAccessor headerAccessor
     ) {
         User currentUser = Optional.ofNullable(headerAccessor.getUser())
             .map(userService::getUserByPrincipalLazy)
             .orElseThrow(() -> new ErrorCodeException(ErrorCode.UNAUTHENTICATED_REQUEST));
 
-        Chat chat = chatService.talkChat(currentUser, meetId, chatTalkRequest.toServiceRequest());
+        ChatResponse chatResponse
+            = chatService.talkChat(talkChatRequest.toServiceRequest(currentUser, meetId));
 
-        template.convertAndSend(
-            "/subscribe/chat/meet/" + meetId,
-            ChatResponseDto.fromChat(chat)
-        );
+        template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponse);
     }
 
     @EventListener
@@ -98,11 +97,12 @@ public class ChatController extends WebSocketControllerSupport {
             return;
         }
 
-        Chat chat = chatService.leaveChat(meetUserId);
+        ChatResponse chatResponse
+            = chatService.leaveChat(LeaveChatServiceRequest.create(meetUserId));
 
         template.convertAndSend(
-            "/subscribe/chat/meet/" + chat.getMeet().getId(),
-            ChatResponseDto.fromChat(chat)
+            "/subscribe/chat/meet/" + chatResponse.getMeetId(),
+            chatResponse
         );
     }
 }

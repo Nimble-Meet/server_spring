@@ -5,7 +5,8 @@ import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOK
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.modules.chat.ChatService;
-import com.nimble.server_spring.modules.chat.dto.response.ChatResponseDto;
+import com.nimble.server_spring.modules.chat.dto.request.GetChatListServiceRequest;
+import com.nimble.server_spring.modules.chat.dto.response.ChatResponse;
 import com.nimble.server_spring.modules.meet.dto.request.CreateMeetRequest;
 import com.nimble.server_spring.modules.meet.dto.request.GetMeetListServiceRequest;
 import com.nimble.server_spring.modules.meet.dto.request.GetMeetServiceRequest;
@@ -136,7 +137,7 @@ public class MeetController {
     @ApiErrorCodes({
         ErrorCode.NOT_MEET_USER_FORBIDDEN
     })
-    public ResponseEntity<Slice<ChatResponseDto>> getChats(
+    public ResponseEntity<Slice<ChatResponse>> getChats(
         @PathVariable @Parameter(description = "채팅 목록을 조회할 미팅의 ID", required = true)
         Long meetId,
         @RequestParam @Parameter(description = "현재 페이지")
@@ -147,8 +148,10 @@ public class MeetController {
     ) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
-        Slice<ChatResponseDto> chatResponsDtoSlice =
-            chatService.getChatList(currentUser, meetId, size, page);
+        Slice<ChatResponse> chatResponsDtoSlice =
+            chatService.getChatList(
+                GetChatListServiceRequest.create(currentUser, meetId, size, page)
+            );
         return new ResponseEntity<>(chatResponsDtoSlice, HttpStatus.OK);
     }
 }
