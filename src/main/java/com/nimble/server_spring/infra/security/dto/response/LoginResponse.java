@@ -27,9 +27,4 @@ public class LoginResponse {
             .accessToken(jwtTokenResponse.getAccessToken())
             .build();
     }
-
-    @SneakyThrows
-    public String toJsonString(ObjectMapper objectMapper) {
-        return objectMapper.writeValueAsString(this);
-    }
 }

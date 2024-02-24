@@ -4,6 +4,7 @@ import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOK
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
+import com.nimble.server_spring.infra.http.ApiResponse;
 import com.nimble.server_spring.modules.chat.ChatService;
 import com.nimble.server_spring.modules.chat.dto.request.GetChatListServiceRequest;
 import com.nimble.server_spring.modules.chat.dto.response.ChatResponse;
@@ -42,7 +43,7 @@ public class MeetController {
 
     @PostMapping
     @Operation(summary = "미팅 생성", description = "미팅 생성 정보를 이용해서 미팅을 생성합니다.")
-    public ResponseEntity<MeetResponse> createMeet(
+    public ApiResponse<MeetResponse> createMeet(
         @RequestBody @Validated @Parameter(description = "미팅 생성 정보", required = true)
         CreateMeetRequest createMeetRequest,
         Principal principal
@@ -52,18 +53,18 @@ public class MeetController {
         MeetResponse meetResponse = meetService.createMeet(
             createMeetRequest.toServiceRequest(currentUser)
         );
-        return new ResponseEntity<>(meetResponse, HttpStatus.CREATED);
+        return ApiResponse.ok(meetResponse);
     }
 
     @GetMapping
     @Operation(summary = "미팅 목록 조회", description = "내가 생성했거나 초대 받은 미팅을 조회합니다.")
-    public ResponseEntity<List<MeetResponse>> getMeets(Principal principal) {
+    public ApiResponse<List<MeetResponse>> getMeets(Principal principal) {
         User currentUser = userService.getUserByPrincipalLazy(principal);
 
         List<MeetResponse> meetResponseList = meetService.getMeetList(
             GetMeetListServiceRequest.create(currentUser)
         );
-        return new ResponseEntity<>(meetResponseList, HttpStatus.OK);
+        return ApiResponse.ok(meetResponseList);
     }
 
     @GetMapping("/{meetId}")
@@ -94,7 +95,7 @@ public class MeetController {
         ErrorCode.USER_NOT_FOUND_BY_EMAIL,
         ErrorCode.USER_ALREADY_INVITED
     })
-    public ResponseEntity<MeetResponse> invite(
+    public ApiResponse<MeetResponse> invite(
         @PathVariable @Parameter(description = "멤버를 초대할 미팅의 ID", required = true)
         Long meetId,
         @RequestBody @Validated @Parameter(description = "초대할 멤버의 정보", required = true)
@@ -106,7 +107,7 @@ public class MeetController {
         MeetResponse meetResponse = meetService.invite(
             inviteMeetRequest.toServiceRequest(meetId, currentUser)
         );
-        return new ResponseEntity<>(meetResponse, HttpStatus.OK);
+        return ApiResponse.ok(meetResponse);
     }
 
     @PostMapping("/{meetId}/kickout")
@@ -117,7 +118,7 @@ public class MeetController {
         ErrorCode.USER_NOT_FOUND_BY_EMAIL,
         ErrorCode.USER_NOT_INVITED
     })
-    public ResponseEntity<MeetResponse> kickOut(
+    public ApiResponse<MeetResponse> kickOut(
         @PathVariable @Parameter(description = "멤버를 강퇴할 미팅의 ID", required = true)
         Long meetId,
         @RequestBody @Validated @Parameter(description = "강퇴할 멤버의 정보", required = true)
@@ -129,7 +130,7 @@ public class MeetController {
         MeetResponse meetResponse = meetService.kickOut(
             kickOutMeetRequest.toServiceRequest(meetId, currentUser)
         );
-        return new ResponseEntity<>(meetResponse, HttpStatus.OK);
+        return ApiResponse.ok(meetResponse);
     }
 
     @GetMapping("/{meetId}/chat")
@@ -137,7 +138,7 @@ public class MeetController {
     @ApiErrorCodes({
         ErrorCode.NOT_MEET_USER_FORBIDDEN
     })
-    public ResponseEntity<Slice<ChatResponse>> getChats(
+    public ApiResponse<Slice<ChatResponse>> getChats(
         @PathVariable @Parameter(description = "채팅 목록을 조회할 미팅의 ID", required = true)
         Long meetId,
         @RequestParam @Parameter(description = "현재 페이지")
@@ -152,6 +153,6 @@ public class MeetController {
             chatService.getChatList(
                 GetChatListServiceRequest.create(currentUser, meetId, size, page)
             );
-        return new ResponseEntity<>(chatResponsDtoSlice, HttpStatus.OK);
+        return ApiResponse.ok(chatResponsDtoSlice);
     }
 }

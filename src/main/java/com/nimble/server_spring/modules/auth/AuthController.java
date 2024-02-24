@@ -6,6 +6,7 @@ import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_T
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
+import com.nimble.server_spring.infra.http.ApiResponse;
 import com.nimble.server_spring.infra.jwt.JwtProperties;
 import com.nimble.server_spring.infra.http.CookieParser;
 import com.nimble.server_spring.infra.http.BearerTokenParser;
@@ -27,8 +28,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,12 +52,12 @@ public class AuthController {
         ErrorCode.EMAIL_ALREADY_EXISTS,
         ErrorCode.NOT_SHA256_ENCRYPTED
     })
-    public ResponseEntity<UserResponse> signup(
+    public ApiResponse<UserResponse> signup(
         @RequestBody @Validated @Parameter(description = "회원 가입 정보", required = true)
         LocalSignupRequest localSignupRequest
     ) {
         UserResponse userResponse = authService.signup(localSignupRequest.toServiceRequest());
-        return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+        return ApiResponse.ok(userResponse);
     }
 
     @PostMapping("/refresh")
@@ -71,7 +70,7 @@ public class AuthController {
         ErrorCode.EXPIRED_REFRESH_TOKEN,
     })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ResponseEntity<LoginResponse> refresh(
+    public ApiResponse<LoginResponse> refresh(
         HttpServletRequest request,
         HttpServletResponse response
     ) {
@@ -91,7 +90,7 @@ public class AuthController {
         response.addCookie(
             tokenCookieFactory.createRefreshTokenCookie(jwtTokenResponse.getRefreshToken())
         );
-        return new ResponseEntity<>(LoginResponse.fromJwtToken(jwtTokenResponse), HttpStatus.OK);
+        return ApiResponse.ok(LoginResponse.fromJwtToken(jwtTokenResponse));
     }
 
     @GetMapping("/whoami")
@@ -101,26 +100,27 @@ public class AuthController {
         ErrorCode.USER_NOT_FOUND,
     })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ResponseEntity<UserResponse> whoami(Principal principal) {
+    public ApiResponse<UserResponse> whoami(Principal principal) {
         User currentUser = userService.getUserByPrincipal(principal);
 
-        return new ResponseEntity<>(UserResponse.fromUser(currentUser), HttpStatus.OK);
+        return ApiResponse.ok(UserResponse.fromUser(currentUser));
     }
 
     @PostMapping("/login/local")
     @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
     @ApiErrorCodes({ErrorCode.LOGIN_FAILED})
-    public ResponseEntity<LoginResponse> login(
+    public ApiResponse<LoginResponse> login(
         @RequestBody @Validated @Parameter(description = "로그인 정보", required = true)
         LocalLoginRequestDto localLoginDto
     ) {
         // LocalLoginFilter에서 처리
-        return new ResponseEntity<>(HttpStatus.OK);
+        return null;
     }
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "쿠키의 access token과 refresh token을 삭제 하여 로그아웃 합니다.")
-    public void logout() {
+    public ApiResponse<Object> logout() {
         // Spring Security에서 처리
+        return null;
     }
 }

@@ -13,11 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.CorsFilter;
 
@@ -35,6 +33,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
+    private final CustomLogoutSuccessHandler logoutSuccessHandler;
 
     @Bean
     public UsernamePasswordAuthenticationFilter customAuthenticationProcessingFilter() {
@@ -84,7 +83,7 @@ public class SecurityConfig {
             .logout(configurer -> configurer
                 .logoutUrl("/api/auth/logout")
                 .deleteCookies(ACCESS_TOKEN_COOKIE_KEY, REFRESH_TOKEN_COOKIE_KEY)
-                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+                .logoutSuccessHandler(logoutSuccessHandler)
             );
 
         return httpSecurity.build();
