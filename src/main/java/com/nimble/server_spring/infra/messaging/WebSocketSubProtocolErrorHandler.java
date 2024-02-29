@@ -1,7 +1,9 @@
 package com.nimble.server_spring.infra.messaging;
 
+import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.response.ErrorData;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,10 +42,10 @@ public class WebSocketSubProtocolErrorHandler extends StompSubProtocolErrorHandl
                 errorCodeException.getMessage()
             );
 
-            ErrorResponse errorResponse = errorCodeException.getErrorCode().toErrorResponse();
-
+            ErrorCode errorCode = errorCodeException.getErrorCode();
+            ApiResponseDto<ErrorData> apiResponse = errorCode.toApiResponse();
             return MessageBuilder.createMessage(
-                errorResponse.toJsonByteArray(objectMapper),
+                apiResponse.toJsonByteArray(objectMapper),
                 webSocketHeader.toMessageHeaders()
             );
         } catch (Exception e) {

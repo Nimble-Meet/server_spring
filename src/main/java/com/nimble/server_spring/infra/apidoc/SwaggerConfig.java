@@ -3,7 +3,8 @@ package com.nimble.server_spring.infra.apidoc;
 import static java.util.stream.Collectors.groupingBy;
 
 import com.nimble.server_spring.infra.error.ErrorCode;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.info.Info;
@@ -68,14 +69,14 @@ public class SwaggerConfig {
             Arrays.stream(errorCodes)
                 .map(
                     errorCode -> {
-                        ErrorResponse errorResponse = errorCode.toErrorResponse();
+                        ApiResponseDto<ErrorData> apiResponse = errorCode.toApiResponse();
                         Example example = new Example();
-                        example.description(errorResponse.getMessage());
-                        example.value(errorResponse);
+                        example.description(apiResponse.getData().getMessage());
+                        example.value(apiResponse);
                         return ApiExampleHolder.builder()
                             .holder(example)
-                            .code(errorResponse.getCode())
-                            .statusCode(errorResponse.getStatus())
+                            .code(apiResponse.getData().getErrorCode())
+                            .statusCode(apiResponse.getStatusCode())
                             .build();
                     })
                 .collect(groupingBy(ApiExampleHolder::getStatusCode));

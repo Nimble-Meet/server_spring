@@ -2,6 +2,7 @@ package com.nimble.server_spring.modules.chat;
 
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import com.nimble.server_spring.infra.messaging.WebSocketExceptionHandler;
 import com.nimble.server_spring.infra.messaging.WebSocketControllerSupport;
 import com.nimble.server_spring.modules.chat.dto.request.EnterChatServiceRequest;
@@ -70,7 +71,10 @@ public class ChatController extends WebSocketControllerSupport {
                     attributes.put(SESSION_MEET_ID_KEY, chatResponse.getMeetId());
                 }
             );
-        template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponse);
+        template.convertAndSend(
+            "/subscribe/chat/meet/" + meetId,
+            ApiResponseDto.ok(chatResponse)
+        );
     }
 
     @MessageMapping("/meet/{meetId}/chat/talk")
@@ -86,7 +90,10 @@ public class ChatController extends WebSocketControllerSupport {
         ChatResponse chatResponse
             = chatService.talkChat(talkChatRequest.toServiceRequest(currentUser, meetId));
 
-        template.convertAndSend("/subscribe/chat/meet/" + meetId, chatResponse);
+        template.convertAndSend(
+            "/subscribe/chat/meet/" + meetId,
+            ApiResponseDto.ok(chatResponse)
+        );
     }
 
     @EventListener
@@ -107,7 +114,7 @@ public class ChatController extends WebSocketControllerSupport {
 
         template.convertAndSend(
             "/subscribe/chat/meet/" + chatResponse.getMeetId(),
-            chatResponse
+            ApiResponseDto.ok(chatResponse)
         );
     }
 }

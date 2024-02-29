@@ -1,6 +1,10 @@
 package com.nimble.server_spring.infra.error;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
+import com.nimble.server_spring.infra.response.NotValidReason;
+import com.nimble.server_spring.infra.response.TypeMismatchReason;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
@@ -42,10 +46,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getRequiredType(),
                 ex.getValue()
             );
-
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(typeMismatchReason.toErrorResponse(objectMapper));
+        return ResponseEntity.badRequest()
+            .body(typeMismatchReason.toApiResponse(objectMapper));
     }
 
     @Override
@@ -58,40 +60,41 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("MethodArgumentNotValidException thrown", ex);
 
         List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
+        NotValidReason notValidReason = NotValidReason.create(fieldErrors);
 
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(NotValidReason.create(fieldErrors).toErrorResponse(objectMapper));
+        return ResponseEntity.badRequest()
+            .body(notValidReason.toApiResponse(objectMapper));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    protected ResponseEntity<ErrorResponse> handleErrorCodeException(
+    protected ResponseEntity<ApiResponseDto<ErrorData>> handleErrorCodeException(
         ConstraintViolationException ex
     ) {
         log.error("ConstraintViolationException thrown", ex);
 
         Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(NotValidReason.create(violations).toErrorResponse(objectMapper));
+        NotValidReason notValidReason = NotValidReason.create(violations);
+
+        return ResponseEntity.badRequest()
+            .body(notValidReason.toApiResponse(objectMapper));
     }
 
     @ExceptionHandler(ErrorCodeException.class)
-    protected ResponseEntity<ErrorResponse> handleErrorCodeException(ErrorCodeException e) {
+    protected ResponseEntity<ApiResponseDto<ErrorData>> handleErrorCodeException(
+        ErrorCodeException e
+    ) {
         log.error("ErrorCodeException thrown", e);
 
         ErrorCode errorCode = e.getErrorCode();
-        return ResponseEntity
-            .status(errorCode.getHttpStatus())
-            .body(errorCode.toErrorResponse());
+        return ResponseEntity.status(errorCode.getHttpStatus())
+            .body(errorCode.toApiResponse());
     }
 
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<ErrorResponse> handleException(Exception ex) {
+    protected ResponseEntity<ApiResponseDto<ErrorData>> handleException(Exception ex) {
         log.error("Unknown Exception thrown", ex);
 
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponseDto.internalServerError());
     }
 }

@@ -9,9 +9,6 @@ import lombok.Getter;
 @Getter
 public class UserResponse {
 
-    @Schema(example = "1", description = "유저 ID")
-    private final Long id;
-
     @Schema(example = "user@email.com", description = "사용자 이메일")
     private final String email;
 
@@ -22,8 +19,7 @@ public class UserResponse {
     private final OauthProvider providerType;
 
     @Builder
-    private UserResponse(Long id, String email, String nickname, OauthProvider providerType) {
-        this.id = id;
+    private UserResponse(String email, String nickname, OauthProvider providerType) {
         this.email = email;
         this.nickname = nickname;
         this.providerType = providerType;
@@ -31,7 +27,6 @@ public class UserResponse {
 
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
-            .id(user.getId())
             .email(user.getEmail())
             .nickname(user.getNickname())
             .providerType(user.getProviderType())
