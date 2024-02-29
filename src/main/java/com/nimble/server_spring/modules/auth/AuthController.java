@@ -6,7 +6,7 @@ import static com.nimble.server_spring.modules.auth.TokenCookieFactory.REFRESH_T
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.http.ApiResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import com.nimble.server_spring.infra.jwt.JwtProperties;
 import com.nimble.server_spring.infra.http.CookieParser;
 import com.nimble.server_spring.infra.http.BearerTokenParser;
@@ -52,12 +52,12 @@ public class AuthController {
         ErrorCode.EMAIL_ALREADY_EXISTS,
         ErrorCode.NOT_SHA256_ENCRYPTED
     })
-    public ApiResponse<UserResponse> signup(
+    public ApiResponseDto<UserResponse> signup(
         @RequestBody @Validated @Parameter(description = "회원 가입 정보", required = true)
         LocalSignupRequest localSignupRequest
     ) {
         UserResponse userResponse = authService.signup(localSignupRequest.toServiceRequest());
-        return ApiResponse.ok(userResponse);
+        return ApiResponseDto.ok(userResponse);
     }
 
     @PostMapping("/refresh")
@@ -70,7 +70,7 @@ public class AuthController {
         ErrorCode.EXPIRED_REFRESH_TOKEN,
     })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ApiResponse<LoginResponse> refresh(
+    public ApiResponseDto<LoginResponse> refresh(
         HttpServletRequest request,
         HttpServletResponse response
     ) {
@@ -90,7 +90,7 @@ public class AuthController {
         response.addCookie(
             tokenCookieFactory.createRefreshTokenCookie(jwtTokenResponse.getRefreshToken())
         );
-        return ApiResponse.ok(LoginResponse.fromJwtToken(jwtTokenResponse));
+        return ApiResponseDto.ok(LoginResponse.fromJwtToken(jwtTokenResponse));
     }
 
     @GetMapping("/whoami")
@@ -100,16 +100,16 @@ public class AuthController {
         ErrorCode.USER_NOT_FOUND,
     })
     @SecurityRequirement(name = JWT_ACCESS_TOKEN)
-    public ApiResponse<UserResponse> whoami(Principal principal) {
+    public ApiResponseDto<UserResponse> whoami(Principal principal) {
         User currentUser = userService.getUserByPrincipal(principal);
 
-        return ApiResponse.ok(UserResponse.fromUser(currentUser));
+        return ApiResponseDto.ok(UserResponse.fromUser(currentUser));
     }
 
     @PostMapping("/login/local")
     @Operation(summary = "이메일 + 비밀 번호 로그인", description = "이메일 + 비밀번호로 로그인을 합니다.")
     @ApiErrorCodes({ErrorCode.LOGIN_FAILED})
-    public ApiResponse<LoginResponse> login(
+    public ApiResponseDto<LoginResponse> login(
         @RequestBody @Validated @Parameter(description = "로그인 정보", required = true)
         LocalLoginRequestDto localLoginDto
     ) {
@@ -119,7 +119,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "쿠키의 access token과 refresh token을 삭제 하여 로그아웃 합니다.")
-    public ApiResponse<Object> logout() {
+    public ApiResponseDto<Object> logout() {
         // Spring Security에서 처리
         return null;
     }

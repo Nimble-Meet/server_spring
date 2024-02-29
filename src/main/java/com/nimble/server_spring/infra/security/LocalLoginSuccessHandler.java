@@ -1,7 +1,7 @@
 package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimble.server_spring.infra.http.ApiResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import com.nimble.server_spring.modules.auth.AuthService;
 import com.nimble.server_spring.modules.auth.TokenCookieFactory;
@@ -52,7 +52,7 @@ public class LocalLoginSuccessHandler implements AuthenticationSuccessHandler {
         LoginResponse loginResponse = LoginResponse.fromJwtToken(jwtTokenResponse);
         ServletResponseWrapper.of(response).sendJsonResponse(
             HttpServletResponse.SC_CREATED,
-            ApiResponse.ok(loginResponse).toJsonString(objectMapper)
+            ApiResponseDto.ok(loginResponse).toJsonString(objectMapper)
         );
     }
 }

@@ -2,7 +2,8 @@ package com.nimble.server_spring.infra.messaging;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
@@ -18,13 +19,13 @@ public abstract class WebSocketControllerSupport {
 
     @MessageExceptionHandler(ErrorCodeException.class)
     @SendToUser(value = "/queue/error", broadcast = false)
-    public ErrorResponse handleErrorCodeException(ErrorCodeException ex) {
+    public ApiResponseDto<ErrorData> handleErrorCodeException(ErrorCodeException ex) {
         return webSocketExceptionHandler.handleErrorCodeException(ex);
     }
 
     @MessageExceptionHandler(MethodArgumentNotValidException.class)
     @SendToUser(value = "/queue/error", broadcast = false)
-    public ErrorResponse handleMethodArgumentNotValidException(
+    public ApiResponseDto<ErrorData> handleMethodArgumentNotValidException(
         MethodArgumentNotValidException ex
     ) {
         return webSocketExceptionHandler.handleMethodArgumentNotValidException(ex);
@@ -32,7 +33,7 @@ public abstract class WebSocketControllerSupport {
 
     @MessageExceptionHandler
     @SendToUser(value = "/queue/error", broadcast = false)
-    public ErrorResponse handleUnknownException(Throwable ex) {
+    public ApiResponseDto<ErrorData> handleUnknownException(Throwable ex) {
         if (ex instanceof MessageConversionException
             && ex.getCause() instanceof InvalidFormatException invalidFormatException) {
             return webSocketExceptionHandler.handleInvalidFormatException(invalidFormatException);

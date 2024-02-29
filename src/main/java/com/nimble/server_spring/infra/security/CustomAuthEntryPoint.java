@@ -2,7 +2,8 @@ package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.error.ErrorCode;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,12 +27,12 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
         AuthenticationException authException
     ) {
         log.info("인증에 실패했습니다.", authException);
-        ErrorResponse errorResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toErrorResponse();
+        ApiResponseDto<ErrorData> apiResponse = ErrorCode.UNAUTHENTICATED_REQUEST.toApiResponse();
 
         try {
             ServletResponseWrapper.of(response).sendJsonResponse(
                 HttpServletResponse.SC_UNAUTHORIZED,
-                errorResponse.toJsonString(objectMapper)
+                apiResponse.toJsonString(objectMapper)
             );
         } catch (Exception e) {
             log.error("Unknow Exception thrown in commence()", e);

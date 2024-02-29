@@ -2,7 +2,8 @@ package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.error.ErrorCode;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,11 +31,11 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         } catch (Exception exception) {
             log.error("필터에서 예상치 못한 예외가 발생했습니다.", exception);
             try {
-                ErrorResponse errorResponse = ErrorCode.INTERNAL_SERVER_ERROR.toErrorResponse();
+                ApiResponseDto<ErrorData> apiResponse = ErrorCode.INTERNAL_SERVER_ERROR.toApiResponse();
                 ServletResponseWrapper.of(response)
                     .sendJsonResponse(
                         HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        errorResponse.toJsonString(objectMapper)
+                        apiResponse.toJsonString(objectMapper)
                     );
             } catch (IOException ioException) {
                 log.error("에러 응답 과정에서 추가로 예외가 발생했습니다.", ioException);

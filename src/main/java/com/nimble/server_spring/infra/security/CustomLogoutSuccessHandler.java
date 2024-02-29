@@ -1,7 +1,7 @@
 package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimble.server_spring.infra.http.ApiResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +25,7 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
     ) throws IOException {
         ServletResponseWrapper.of(response).sendJsonResponse(
             HttpServletResponse.SC_CREATED,
-            ApiResponse.ok(null).toJsonString(objectMapper)
+            ApiResponseDto.ok(null).toJsonString(objectMapper)
         );
     }
 }

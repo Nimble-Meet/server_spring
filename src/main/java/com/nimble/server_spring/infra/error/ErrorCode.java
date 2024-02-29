@@ -10,6 +10,8 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -80,12 +82,14 @@ public enum ErrorCode {
     private final HttpStatus httpStatus;
     private final String message;
 
-    public ErrorResponse toErrorResponse() {
-        return ErrorResponse.builder()
-            .status(httpStatus.value())
-            .error(httpStatus.name())
-            .code(name())
+    public ErrorData toErrorData() {
+        return ErrorData.builder()
+            .errorCode(name())
             .message(message)
             .build();
+    }
+
+    public ApiResponseDto<ErrorData> toApiResponse() {
+        return ApiResponseDto.create(httpStatus, toErrorData());
     }
 }

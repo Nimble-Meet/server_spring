@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.error;
+package com.nimble.server_spring.infra.response;
 
 import java.util.Optional;
 import lombok.Getter;

@@ -4,7 +4,7 @@ import static com.nimble.server_spring.infra.apidoc.SwaggerConfig.JWT_ACCESS_TOK
 
 import com.nimble.server_spring.infra.apidoc.ApiErrorCodes;
 import com.nimble.server_spring.infra.error.ErrorCode;
-import com.nimble.server_spring.infra.http.ApiResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import com.nimble.server_spring.modules.user.dto.response.SimpleUserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,12 +30,12 @@ public class UserController {
     @ApiErrorCodes({
         ErrorCode.USER_NOT_FOUND_BY_EMAIL
     })
-    public ApiResponse<SimpleUserResponse> getUserByEmail(
+    public ApiResponseDto<SimpleUserResponse> getUserByEmail(
         @PathVariable @Parameter(description = "이메일", required = true)
         String email
     ) {
         User user = userService.getUserByEmail(email);
         SimpleUserResponse simpleUserResponse = SimpleUserResponse.fromUser(user);
-        return ApiResponse.ok(simpleUserResponse);
+        return ApiResponseDto.ok(simpleUserResponse);
     }
 }

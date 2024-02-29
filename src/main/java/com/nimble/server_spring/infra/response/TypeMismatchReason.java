@@ -1,17 +1,13 @@
-package com.nimble.server_spring.infra.error;
+package com.nimble.server_spring.infra.response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
-import lombok.SneakyThrows;
 
-public class TypeMismatchReason implements ErrorResponseSource {
-
-    private final Map<String, BadRequestInfo> fieldMap;
+public class TypeMismatchReason extends BadRequestReason {
 
     private TypeMismatchReason(Map<String, BadRequestInfo> fieldMap) {
-        this.fieldMap = fieldMap;
+        super(fieldMap);
     }
 
     public static TypeMismatchReason create(
@@ -33,14 +29,5 @@ public class TypeMismatchReason implements ErrorResponseSource {
             receivedValueString
         );
         return new TypeMismatchReason(Map.of(fieldNameOrDefault, badRequestCause));
-    }
-
-    @SneakyThrows
-    public String toJsonString(ObjectMapper objectMapper) {
-        return objectMapper.writeValueAsString(fieldMap);
-    }
-
-    public ErrorResponse toErrorResponse(ObjectMapper objectMapper) {
-        return ErrorResponse.createBadRequestResponse(toJsonString(objectMapper));
     }
 }

@@ -2,7 +2,7 @@ package com.nimble.server_spring.modules.chat;
 
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.http.ApiResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
 import com.nimble.server_spring.infra.messaging.WebSocketExceptionHandler;
 import com.nimble.server_spring.infra.messaging.WebSocketControllerSupport;
 import com.nimble.server_spring.modules.chat.dto.request.EnterChatServiceRequest;
@@ -73,7 +73,7 @@ public class ChatController extends WebSocketControllerSupport {
             );
         template.convertAndSend(
             "/subscribe/chat/meet/" + meetId,
-            ApiResponse.ok(chatResponse)
+            ApiResponseDto.ok(chatResponse)
         );
     }
 
@@ -92,7 +92,7 @@ public class ChatController extends WebSocketControllerSupport {
 
         template.convertAndSend(
             "/subscribe/chat/meet/" + meetId,
-            ApiResponse.ok(chatResponse)
+            ApiResponseDto.ok(chatResponse)
         );
     }
 
@@ -114,7 +114,7 @@ public class ChatController extends WebSocketControllerSupport {
 
         template.convertAndSend(
             "/subscribe/chat/meet/" + chatResponse.getMeetId(),
-            ApiResponse.ok(chatResponse)
+            ApiResponseDto.ok(chatResponse)
         );
     }
 }

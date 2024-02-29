@@ -2,7 +2,8 @@ package com.nimble.server_spring.infra.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimble.server_spring.infra.error.ErrorCode;
-import com.nimble.server_spring.infra.error.ErrorResponse;
+import com.nimble.server_spring.infra.response.ApiResponseDto;
+import com.nimble.server_spring.infra.response.ErrorData;
 import com.nimble.server_spring.infra.http.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,11 +31,11 @@ public class LocalLoginFailureHandler implements AuthenticationFailureHandler {
             exception.getClass().getSimpleName(),
             exception.getMessage()
         );
-        ErrorResponse errorResponse = ErrorCode.LOGIN_FAILED.toErrorResponse();
+        ApiResponseDto<ErrorData> apiResponse = ErrorCode.LOGIN_FAILED.toApiResponse();
         ServletResponseWrapper.of(response)
             .sendJsonResponse(
                 ErrorCode.LOGIN_FAILED.getHttpStatus().value(),
-                errorResponse.toJsonString(objectMapper)
+                apiResponse.toJsonString(objectMapper)
             );
     }
 }

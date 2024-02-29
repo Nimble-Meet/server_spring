@@ -1,4 +1,4 @@
-package com.nimble.server_spring.infra.error;
+package com.nimble.server_spring.infra.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
@@ -6,15 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
 import org.springframework.validation.FieldError;
 
-public class NotValidReason implements ErrorResponseSource {
-
-    private final Map<String, BadRequestInfo> fieldMap;
+public class NotValidReason extends BadRequestReason {
 
     private NotValidReason(Map<String, BadRequestInfo> fieldMap) {
-        this.fieldMap = fieldMap;
+        super(fieldMap);
     }
 
     public static NotValidReason create(List<FieldError> fieldErrors) {
@@ -50,14 +47,5 @@ public class NotValidReason implements ErrorResponseSource {
                 )
             );
         return new NotValidReason(filedMap);
-    }
-
-    @SneakyThrows
-    public String toJsonString(ObjectMapper objectMapper) {
-        return objectMapper.writeValueAsString(fieldMap);
-    }
-
-    public ErrorResponse toErrorResponse(ObjectMapper objectMapper) {
-        return ErrorResponse.createBadRequestResponse(toJsonString(objectMapper));
     }
 }
