@@ -8,7 +8,6 @@ import lombok.Getter;
 @Getter
 public class JwtTokenResponse {
 
-    private final Long id;
     private final String accessToken;
     private final String refreshToken;
     private final LocalDateTime expiresAt;
@@ -16,13 +15,11 @@ public class JwtTokenResponse {
 
     @Builder
     private JwtTokenResponse(
-        Long id,
         String accessToken,
         String refreshToken,
         LocalDateTime expiresAt,
         UserResponse user
     ) {
-        this.id = id;
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expiresAt = expiresAt;
@@ -31,7 +28,6 @@ public class JwtTokenResponse {
 
     public static JwtTokenResponse fromJwtToken(JwtToken jwtToken) {
         return JwtTokenResponse.builder()
-            .id(jwtToken.getId())
             .accessToken(jwtToken.getAccessToken())
             .refreshToken(jwtToken.getRefreshToken())
             .expiresAt(jwtToken.getExpiresAt())
