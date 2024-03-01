@@ -1,28 +1,15 @@
 server:
   port: 3001
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
-    username: ${DATABASE_USER}
-    password: ${DATABASE_PASSWORD}
-    hikari:
-      minimum-idle: 10
-      maximum-pool-size: 20
+  profiles:
+    default: local
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
-jwt:
-  accessTokenSecret: ${JWT_ACCESS_TOKEN_SECRET}
-  accessTokenExpiry: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
-  refreshTokenExpiry: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
-  refreshTokenSecret: ${JWT_REFRESH_TOKEN_SECRET}
 
 logging:
   level:
@@ -35,3 +22,46 @@ springdoc:
     disable-swagger-default-url: true
   api-docs:
     path: /api-docs
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: validate
+jwt:
+  accessTokenSecret: ${JWT_ACCESS_TOKEN_SECRET}
+  accessTokenExpiry: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME}
+  refreshTokenExpiry: ${JWT_REFRESH_TOKEN_EXPIRATION_TIME}
+  refreshTokenSecret: ${JWT_REFRESH_TOKEN_SECRET}
+---
+
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        globally_quoted_identifiers: true
+  datasource:
+    url: jdbc:h2:mem:~/testdb;MODE=MYSQL;DB_CLOSE_DELAY=-1;
+jwt:
+  accessTokenSecret: eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwOTI1NTMyNiwiaWF0IjoxNzA5MjU1MzI2fQ.rL3SWFXT9ySdgUOVal5XHsARQ2qECwIvkD32U0onIQk
+  accessTokenExpiry: 9000
+  refreshTokenExpiry: 604800
+  refreshTokenSecret: eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwOTI1NTM1MiwiaWF0IjoxNzA5MjU1MzUyfQ.GDzmNuLvUxgpTX-oWR06zg2lirrgq89_4CCypO7x3uE
