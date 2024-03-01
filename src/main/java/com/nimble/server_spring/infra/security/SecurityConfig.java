@@ -64,13 +64,13 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(configurer -> configurer
-                .requestMatchers("/api/auth/signup").permitAll()
-                .requestMatchers("/api/auth/login/**").permitAll()
-                .requestMatchers("/api/auth/refresh").permitAll()
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/api-docs/**").permitAll()
-                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/signup")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/login/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/refresh")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api-docs/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/ws/**")).permitAll()
                 .anyRequest().authenticated()
             )
 
