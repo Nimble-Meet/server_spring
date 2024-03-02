@@ -6,8 +6,7 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-public interface JwtTokenRepository extends JpaRepository<JwtToken, Long>,
-    QuerydslPredicateExecutor<JwtToken> {
+public interface JwtTokenRepository extends JpaRepository<JwtToken, Long> {
 
     Optional<JwtToken> findOneByRefreshToken(String refreshToken);
 
