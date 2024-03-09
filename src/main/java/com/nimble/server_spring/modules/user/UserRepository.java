@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Transactional
-public interface UserRepository extends JpaRepository<User, Long>, QuerydslPredicateExecutor<User> {
+public interface UserRepository extends JpaRepository<User, Long> {
+
     Optional<User> findOneByEmail(String email);
+
     boolean existsByEmail(String email);
 }
