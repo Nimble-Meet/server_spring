@@ -7,9 +7,12 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.nimble.server_spring.IntegrationTestSupport;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
+import com.nimble.server_spring.infra.jwt.AuthToken;
+import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.security.RoleType;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupServiceRequest;
 import com.nimble.server_spring.modules.auth.dto.request.PublishTokenServiceRequest;
+import com.nimble.server_spring.modules.auth.dto.request.RotateTokenServiceRequest;
 import com.nimble.server_spring.modules.auth.dto.response.JwtTokenResponse;
 import com.nimble.server_spring.modules.auth.dto.response.UserResponse;
 import com.nimble.server_spring.modules.auth.enums.OauthProvider;
@@ -37,6 +40,9 @@ class AuthServiceTest extends IntegrationTestSupport {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuthTokenManager authTokenManager;
 
     @DisplayName("ID, 비밀번호 정보를 받아서 회원 가입을 한다.")
     @Test
@@ -145,6 +151,83 @@ class AuthServiceTest extends IntegrationTestSupport {
             );
     }
 
+    @DisplayName("유효한 refresh token, access token으로 토큰 재발급을 요청한 경우 토큰을 갱신한다.")
+    @Test
+    void rotateToken() throws InterruptedException {
+        // given
+        User user = createLocalUser("user@email.com");
+        userRepository.save(user);
+
+        String accessToken = "expired_access_token";
+        String refreshToken = authTokenManager.publishRefreshToken(user.getId()).getToken();
+        JwtToken jwtToken = createJwtToken(accessToken, refreshToken, user);
+        jwtTokenRepository.save(jwtToken);
+
+        RotateTokenServiceRequest rotateTokenRequest
+            = RotateTokenServiceRequest.create(accessToken, refreshToken);
+
+        // when
+        JwtTokenResponse jwtTokenResponse = authService.rotateToken(rotateTokenRequest);
+
+        // then
+        assertThat(jwtTokenResponse).isNotNull()
+            .extracting("accessToken", "refreshToken")
+            .allSatisfy(token -> assertThat(token).isNotNull());
+        assertThat(jwtTokenResponse.getAccessToken()).isNotEqualTo(accessToken);
+
+        List<JwtToken> jwtTokens = jwtTokenRepository.findAll();
+        assertThat(jwtTokens).hasSize(1)
+            .extracting("accessToken", "refreshToken")
+            .containsExactlyInAnyOrder(
+                tuple(jwtTokenResponse.getAccessToken(), jwtTokenResponse.getRefreshToken())
+            );
+    }
+
+    @DisplayName("유효하지 않은 refresh token으로 재발급을 요청한 경우 예외가 발생한다.")
+    @Test
+    void rotateTokenWithInvalidRefreshToken() throws InterruptedException {
+        // given
+        User user = createLocalUser("user@email.com");
+        userRepository.save(user);
+
+        String accessToken = "expired_access_token";
+        String refreshToken = "invalid_refresh_token";
+        JwtToken jwtToken = createJwtToken(accessToken, refreshToken, user);
+        jwtTokenRepository.save(jwtToken);
+
+        RotateTokenServiceRequest rotateTokenRequest
+            = RotateTokenServiceRequest.create(accessToken, refreshToken);
+
+        // when
+        // then
+        assertThatThrownBy(() -> authService.rotateToken(rotateTokenRequest))
+            .isInstanceOf(ErrorCodeException.class)
+            .hasMessage(ErrorCode.INVALID_REFRESH_TOKEN.getMessage());
+    }
+
+    @DisplayName("이전에 발급했던 access token과 다른 값으로 재발급을 요청한 경우 예외가 발생한다.")
+    @Test
+    void rotateTokenWithNotMatchingAccessToken() throws InterruptedException {
+        // given
+        User user = createLocalUser("user@email.com");
+        userRepository.save(user);
+
+        String accessToken = "expired_access_token";
+        String refreshToken = authTokenManager.publishRefreshToken(user.getId()).getToken();
+        JwtToken jwtToken = createJwtToken(accessToken, refreshToken, user);
+        jwtTokenRepository.save(jwtToken);
+
+        RotateTokenServiceRequest rotateTokenRequest = RotateTokenServiceRequest.create(
+            "not_matching_access_token",
+            refreshToken
+        );
+
+        // when
+        // then
+        assertThatThrownBy(() -> authService.rotateToken(rotateTokenRequest))
+            .isInstanceOf(ErrorCodeException.class)
+            .hasMessage(ErrorCode.INCONSISTENT_ACCESS_TOKEN.getMessage());
+    }
 
     private static User createLocalUser(String email) {
         return User.createLocalUser(
@@ -158,6 +241,15 @@ class AuthServiceTest extends IntegrationTestSupport {
         return JwtToken.builder()
             .accessToken("accessToken")
             .refreshToken("refreshToken")
+            .expiresAt(LocalDateTime.now().plusDays(1))
+            .user(user)
+            .build();
+    }
+
+    private static JwtToken createJwtToken(String accessToken, String refreshToken, User user) {
+        return JwtToken.builder()
+            .accessToken(accessToken)
+            .refreshToken(refreshToken)
             .expiresAt(LocalDateTime.now().plusDays(1))
             .user(user)
             .build();
