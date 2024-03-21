@@ -24,6 +24,18 @@ public class CreateMeetServiceRequest {
         this.hostUser = hostUser;
     }
 
+    public static CreateMeetServiceRequest create(
+        String meetName,
+        String description,
+        User hostUser
+    ) {
+        return CreateMeetServiceRequest.builder()
+            .meetName(meetName)
+            .description(description)
+            .hostUser(hostUser)
+            .build();
+    }
+
     public Meet toEntity() {
         return Meet.create(meetName, description, hostUser);
     }
