@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.nimble.server_spring.IntegrationTestSupport;
 import com.nimble.server_spring.infra.error.ErrorCode;
 import com.nimble.server_spring.infra.error.ErrorCodeException;
-import com.nimble.server_spring.infra.jwt.AuthToken;
 import com.nimble.server_spring.infra.jwt.AuthTokenManager;
 import com.nimble.server_spring.infra.security.RoleType;
 import com.nimble.server_spring.modules.auth.dto.request.LocalSignupServiceRequest;
