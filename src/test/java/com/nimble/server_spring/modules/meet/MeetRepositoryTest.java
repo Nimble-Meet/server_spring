@@ -76,14 +76,6 @@ class MeetRepositoryTest extends IntegrationTestSupport {
             );
     }
 
-    private MeetUser createMeetUser(Meet meet1, User user1, MeetUserRole role) {
-        return MeetUser.builder()
-            .meet(meet1)
-            .user(user1)
-            .meetUserRole(role)
-            .build();
-    }
-
     private Meet createMeet(String meetName) {
         return Meet.builder()
             .meetName(meetName)
@@ -97,6 +89,14 @@ class MeetRepositoryTest extends IntegrationTestSupport {
             .password(passwordEncoder.encode("password"))
             .nickname("nickname")
             .providerType(OauthProvider.LOCAL)
+            .build();
+    }
+
+    private MeetUser createMeetUser(Meet meet, User user, MeetUserRole role) {
+        return MeetUser.builder()
+            .meet(meet)
+            .user(user)
+            .meetUserRole(role)
             .build();
     }
 }
