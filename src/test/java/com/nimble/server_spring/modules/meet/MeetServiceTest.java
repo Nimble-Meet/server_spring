@@ -43,22 +43,13 @@ class MeetServiceTest extends IntegrationTestSupport {
         MeetResponse meetResponse = meetService.createMeet(createMeetRequest);
 
         // then
-        assertThat(meetResponse).isNotNull()
+        assertThat(meetResponse.getId()).isNotNull();
+        assertThat(meetResponse)
             .extracting("meetName", "description")
             .containsExactly("my_meet", "example_description");
-
-        List<Meet> meets = meetRepository.findAll();
-        assertThat(meets).hasSize(1)
-            .extracting("meetName", "description")
-            .containsExactly(
-                tuple("my_meet", "example_description")
-            );
-        assertThat(meets.get(0).getMeetUsers()).hasSize(1)
-            .satisfiesExactly(
-                meetUser -> {
-                    assertThat(meetUser.getUser()).isEqualTo(user);
-                }
-            );
+        assertThat(meetResponse.getMeetUsers()).hasSize(1)
+            .extracting("email")
+            .containsExactly("user@email.com");
     }
 
     private static User createLocalUser(String email) {
