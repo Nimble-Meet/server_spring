@@ -13,24 +13,28 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(of = {"id", "accessToken", "refreshToken", "expiresAt"})
+@ToString(onlyExplicitlyIncluded = true)
 public class JwtToken extends BaseEntity {
 
     @Id
     @GeneratedValue
+    @ToString.Include
     private Long id;
 
     @Column(unique = true)
     @NotNull
     @NotBlank
+    @ToString.Include
     private String accessToken;
 
     @Column(unique = true)
     @NotNull
     @NotBlank
+    @ToString.Include
     private String refreshToken;
 
     @NotNull
+    @ToString.Include
     private LocalDateTime expiresAt;
 
     @OneToOne(fetch = FetchType.LAZY)

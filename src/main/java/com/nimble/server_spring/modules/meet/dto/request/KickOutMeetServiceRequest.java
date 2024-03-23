@@ -11,22 +11,22 @@ public class KickOutMeetServiceRequest {
     @Email
     private final String email;
 
-    private final User currentUser;
-
     private final Long meetId;
+
+    private final User currentUser;
 
     @Builder
     private KickOutMeetServiceRequest(String email, Long meetId, User currentUser) {
         this.email = email;
-        this.currentUser = currentUser;
         this.meetId = meetId;
+        this.currentUser = currentUser;
     }
 
-    public static KickOutMeetServiceRequest create(String email, User currentUser, Long meetId) {
+    public static KickOutMeetServiceRequest create(String email, Long meetId, User currentUser) {
         return KickOutMeetServiceRequest.builder()
             .email(email)
-            .currentUser(currentUser)
             .meetId(meetId)
+            .currentUser(currentUser)
             .build();
     }
 }

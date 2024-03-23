@@ -22,7 +22,7 @@ class UserRepositoryTest extends IntegrationTestSupport {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @DisplayName("email로 User를 찾는다.")
+    @DisplayName("이메일로 사용자를 조회한다.")
     @Test
     void findOneByEmail() {
         // given
@@ -40,7 +40,7 @@ class UserRepositoryTest extends IntegrationTestSupport {
             .isEqualTo("user1@email.com");
     }
 
-    @DisplayName("email로 User의 존재 여부를 확인한다.")
+    @DisplayName("이메일로 사용자의 존재 여부를 확인한다.")
     @CsvSource({"user@email.com,true", "User@email.com,false"})
     @ParameterizedTest
     void existsByEmail(String email, boolean expected) {
