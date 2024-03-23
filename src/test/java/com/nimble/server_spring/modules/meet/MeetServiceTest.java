@@ -42,7 +42,7 @@ class MeetServiceTest extends IntegrationTestSupport {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @DisplayName("미팅 이름 및 설명, 호스트 유저 정보를 받아 미팅을 생성한다.")
+    @DisplayName("미팅 이름, 설명을 전달하여 미팅을 생성할 수 있다.")
     @Test
     void createMeetTest() {
         // given
@@ -68,7 +68,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             .containsExactly("user@email.com");
     }
 
-    @DisplayName("사용자가 참여한 미팅 목록을 조회한다.")
+    @DisplayName("참여한 미팅 목록을 조회할 수 있다.")
     @Test
     void getMeetList() {
         // given
@@ -98,7 +98,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             );
     }
 
-    @DisplayName("ID에 해당하는 미팅을 조회한다.")
+    @DisplayName("미팅 참여자는 ID로 미팅을 조회할 수 있다.")
     @Test
     void getMeet() {
         // given
@@ -166,7 +166,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             .hasMessage(ErrorCode.NOT_MEET_USER_FORBIDDEN.getMessage());
     }
 
-    @DisplayName("email에 해당하는 사용자를 미팅에 참여시킨다.")
+    @DisplayName("미팅 호스트는 사용자를 미팅에 참여시킬 수 있다.")
     @Test
     void invite() {
         // given
@@ -202,7 +202,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             );
     }
 
-    @DisplayName("존재하지 않는 ID의 미팅으로 사용자를 초대시키면 예외가 발생한다.")
+    @DisplayName("존재하지 않는 미팅 ID로 사용자를 참여시키면 예외가 발생한다.")
     @Test
     void inviteWithNotExistingMeetId() {
         // given
@@ -248,7 +248,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             .hasMessage(ErrorCode.NOT_MEET_HOST_FORBIDDEN.getMessage());
     }
 
-    @DisplayName("미팅의 최대 참여자를 초과하여 사용자를 참여시키면 예외가 발생한다.")
+    @DisplayName("최대 참여자 수를 초과하여 사용자를 미팅에 참여시키면 예외가 발생한다.")
     @Test
     void inviteOverLimit() {
         // given
@@ -322,7 +322,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             .hasMessage(ErrorCode.USER_ALREADY_INVITED.getMessage());
     }
 
-    @DisplayName("이메일에 해당하는 사용자를 미팅에서 강퇴시킨다.")
+    @DisplayName("미팅 호스트는 미팅 참여자를 강퇴할 수 있다.")
     @Test
     void kickOut() {
         // given
@@ -401,7 +401,7 @@ class MeetServiceTest extends IntegrationTestSupport {
             .hasMessage(ErrorCode.NOT_MEET_HOST_FORBIDDEN.getMessage());
     }
 
-    @DisplayName("존재하지 않는 이메일로 사용자를 참여시키면 예외가 발생한다.")
+    @DisplayName("존재하지 않는 이메일로 사용자를 강퇴하면 예외가 발생한다.")
     @Test
     void kickOutWithNotExistingEmail() {
         // given

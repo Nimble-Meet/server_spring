@@ -43,7 +43,7 @@ class AuthServiceTest extends IntegrationTestSupport {
     @Autowired
     private AuthTokenManager authTokenManager;
 
-    @DisplayName("ID, 비밀번호 정보를 받아서 회원 가입을 한다.")
+    @DisplayName("ID, 비밀번호 정보를 넘겨서 회원 가입을 할 수 있다.")
     @Test
     void signup() {
         // given
@@ -69,7 +69,7 @@ class AuthServiceTest extends IntegrationTestSupport {
         assertThat(passwordEncoder.matches(password, users.get(0).getPassword())).isTrue();
     }
 
-    @DisplayName("이미 가입한 이메일로 회원 가입을 하는 경우 예외가 발생한다.")
+    @DisplayName("이미 가입한 이메일로 회원 가입을 하면 예외가 발생한다.")
     @Test
     void signupWithExistingEmail() {
         // given
@@ -89,7 +89,7 @@ class AuthServiceTest extends IntegrationTestSupport {
             .hasMessage(ErrorCode.EMAIL_ALREADY_EXISTS.getMessage());
     }
 
-    @DisplayName("기존에 토큰을 발급한 적이 없는 유저이면 토큰을 발급한 후 저장한다.")
+    @DisplayName("인증된 사용자는 access token, refresh token을 새롭게 발급할 수 있다. 기존에 토큰을 발급한 적이 없는 유저이면 데이터를 새롭게 저장한다.")
     @Test
     void publishJwtTokenNotExisting() {
         // given
@@ -118,7 +118,7 @@ class AuthServiceTest extends IntegrationTestSupport {
             );
     }
 
-    @DisplayName("기존에 토큰을 발급한 적이 있는 유저이면 토큰을 발급한 후 기존의 데이터를 수정한다.")
+    @DisplayName("인증된 사용자는 access token, refresh token을 새롭게 발급할 수 있다. 기존에 토큰을 발급한 적이 있는 유저이면 기존의 데이터를 수정한다.")
     @Test
     void publishJwtTokenExisting() {
         // given
@@ -150,7 +150,7 @@ class AuthServiceTest extends IntegrationTestSupport {
             );
     }
 
-    @DisplayName("유효한 refresh token, access token으로 토큰 재발급을 요청한 경우 토큰을 갱신한다.")
+    @DisplayName("refresh token, access token으로 토큰을 재발급 할 수 있다.")
     @Test
     void rotateToken() throws InterruptedException {
         // given
@@ -182,7 +182,7 @@ class AuthServiceTest extends IntegrationTestSupport {
             );
     }
 
-    @DisplayName("유효하지 않은 refresh token으로 재발급을 요청한 경우 예외가 발생한다.")
+    @DisplayName("유효하지 않은 refresh token으로 토큰 재발급을 요청하면 예외가 발생한다.")
     @Test
     void rotateTokenWithInvalidRefreshToken() throws InterruptedException {
         // given
@@ -204,7 +204,7 @@ class AuthServiceTest extends IntegrationTestSupport {
             .hasMessage(ErrorCode.INVALID_REFRESH_TOKEN.getMessage());
     }
 
-    @DisplayName("이전에 발급했던 access token과 다른 값으로 재발급을 요청한 경우 예외가 발생한다.")
+    @DisplayName("이전에 발급했던 access token과 다른 값으로 토큰 재발급을 요청하면 예외가 발생한다.")
     @Test
     void rotateTokenWithNotMatchingAccessToken() throws InterruptedException {
         // given
