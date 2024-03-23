@@ -51,21 +51,20 @@ class MeetRepositoryTest extends IntegrationTestSupport {
     @Test
     void findParticipatedMeets() {
         // given
-        User user1 = createUser("user1@email.com");
-        User user2 = createUser("user2@email.com");
-        userRepository.saveAll(List.of(user1, user2));
+        User user = createUser("user@email.com");
+        userRepository.save(user);
 
         Meet meet1 = createMeet("meetName1");
         Meet meet2 = createMeet("meetName2");
         Meet meet3 = createMeet("meetName3");
         meetRepository.saveAll(List.of(meet1, meet2, meet3));
 
-        MeetUser meetUser1 = createMeetUser(meet1, user1, MeetUserRole.HOST);
-        MeetUser meetUser2 = createMeetUser(meet2, user1, MeetUserRole.PARTICIPANT);
+        MeetUser meetUser1 = createMeetUser(meet1, user, MeetUserRole.HOST);
+        MeetUser meetUser2 = createMeetUser(meet2, user, MeetUserRole.PARTICIPANT);
         meetUserRepository.saveAll(List.of(meetUser1, meetUser2));
 
         // when
-        List<Meet> meets = meetRepository.findParticipatedMeets(user1.getId());
+        List<Meet> meets = meetRepository.findParticipatedMeets(user.getId());
 
         // then
         assertThat(meets).hasSize(2)
