@@ -35,9 +35,6 @@ class ChatRepositoryTest extends IntegrationTestSupport {
     private ChatRepository chatRepository;
 
     @Autowired
-    private MeetUserRepository meetUserRepository;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @DisplayName("ID에 해당하는 미팅의 채팅 목록을 조회한다.")
@@ -47,13 +44,13 @@ class ChatRepositoryTest extends IntegrationTestSupport {
         User user = createUser("user@email.com");
         userRepository.save(user);
 
-        Meet meet = createMeet("meetName1");
+        Meet meet1 = createMeet("meetName1");
         Meet meet2 = createMeet("meetName2");
-        MeetUser meetUser1 = createMeetUser(meet, user, MeetUserRole.HOST);
-        meet.getMeetUsers().add(meetUser1);
+        MeetUser meetUser1 = createMeetUser(meet1, user, MeetUserRole.HOST);
+        meet1.getMeetUsers().add(meetUser1);
         MeetUser meetUser2 = createMeetUser(meet2, user, MeetUserRole.HOST);
         meet2.getMeetUsers().add(meetUser2);
-        meetRepository.saveAll(List.of(meet, meet2));
+        meetRepository.saveAll(List.of(meet1, meet2));
 
         Chat chat1 = createChat(ChatType.ENTER, meetUser1);
         Chat chat2 = createChat(ChatType.LEAVE, meetUser1);
@@ -62,7 +59,7 @@ class ChatRepositoryTest extends IntegrationTestSupport {
 
         // when
         Slice<ChatResponse> chatResponses = chatRepository.findAllByMeetId(
-            meet.getId(),
+            meet1.getId(),
             PageRequest.ofSize(10)
         );
 
@@ -70,8 +67,8 @@ class ChatRepositoryTest extends IntegrationTestSupport {
         assertThat(chatResponses.getContent()).hasSize(2)
             .extracting("email", "meetId", "chatType")
             .containsExactlyInAnyOrder(
-                tuple("user@email.com", meet.getId(), ChatType.ENTER),
-                tuple("user@email.com", meet.getId(), ChatType.LEAVE)
+                tuple("user@email.com", meet1.getId(), ChatType.ENTER),
+                tuple("user@email.com", meet1.getId(), ChatType.LEAVE)
             );
     }
 

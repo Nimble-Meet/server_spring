@@ -17,4 +17,12 @@ public class TalkChatServiceRequest {
         this.meetId = meetId;
         this.message = message;
     }
+
+    public static TalkChatServiceRequest create(User currentUser, Long meetId, String message) {
+        return TalkChatServiceRequest.builder()
+            .currentUser(currentUser)
+            .meetId(meetId)
+            .message(message)
+            .build();
+    }
 }
