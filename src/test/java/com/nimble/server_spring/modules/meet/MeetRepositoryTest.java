@@ -29,7 +29,7 @@ class MeetRepositoryTest extends IntegrationTestSupport {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @DisplayName("id로 Meet을 찾는다.")
+    @DisplayName("ID로 미팅을 조회한다.")
     @Test
     void findMeetById() {
         // given
@@ -47,7 +47,7 @@ class MeetRepositoryTest extends IntegrationTestSupport {
             .containsExactlyInAnyOrder("meetName1", meet1.getCode());
     }
 
-    @DisplayName("해당하는 User가 참여한 Meet 목록을 찾는다.")
+    @DisplayName("ID에 해당하는 사용자가 참여한 미팅 목록을 조회한다.")
     @Test
     void findParticipatedMeets() {
         // given

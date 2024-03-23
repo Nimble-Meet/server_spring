@@ -26,7 +26,7 @@ class JwtTokenRepositoryTest extends IntegrationTestSupport {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @DisplayName("refresh token 값으로 JwtToken을 찾는다.")
+    @DisplayName("refresh token 값으로 JWT Token 정보를 조회한다.")
     @Test
     void findOneByRefreshToken() {
         // given
@@ -47,7 +47,7 @@ class JwtTokenRepositoryTest extends IntegrationTestSupport {
             .containsExactlyInAnyOrder("refresh_token1", "access_token1");
     }
 
-    @DisplayName("user id로 JwtToken을 찾는다.")
+    @DisplayName("사용자의 ID로 JWT Token 정보를 조회한다.")
     @Test
     void findOneByUserId() {
         // given
